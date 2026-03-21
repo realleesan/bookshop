@@ -1,0 +1,87 @@
+/* CSS cho phần Giới Thiệu */
+.introduction-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    color: #000; /* Màu chữ đen */
+    background-color: #fff; /* Nền trắng */
+    border: 2px solid var(--red); /* Viền đỏ */
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Hiệu ứng đổ bóng */
+}
+
+.section-title {
+    color: var(--red); /* Màu đỏ */
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+    border-bottom: 2px solid var(--red); /* Viền dưới đỏ */
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.about-us p, .additional-resources p, .how-to-use p, .support p, .legal-info p, .special-offers p {
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.book-categories {
+    margin: 30px 0;
+}
+
+.categories-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.category-item {
+    flex-basis: calc(33% - 10px);
+    background-color: #f8f8f8; /* Nền xám nhạt */
+    border: 1px solid #000; /* Viền đen */
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); /* Hiệu ứng đổ bóng nhẹ */
+}
+
+.features-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.features-list li {
+    padding: 10px;
+    background-color: #f8f8f8; /* Nền xám nhạt */
+    border: 1px solid #000; /* Viền đen */
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.features-list li strong {
+    color: #ff0000; /* Màu đỏ */
+}
+
+a {
+    color: #ff0000; /* Màu đỏ */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive cho mobile */
+@media screen and (max-width: 768px) {
+    .categories-list {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .category-item {
+        flex-basis: 100%;
+        margin-bottom: 15px;
+    }
+}
