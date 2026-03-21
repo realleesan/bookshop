@@ -1,7 +1,135 @@
 const PHIVANCHUYEN = 30000;
 let priceFinal = document.getElementById("checkout-cart-price-final");
+
+// Coupon system variables
+let appliedCoupon = null;
+let discountAmount = 0;
+let currentCheckoutOption = 1; // 1 = cart, 2 = single product
+let currentCheckoutProduct = null; // product data for single product checkout
+
+// Function to calculate total with shipping
+function getTotalWithShipping() {
+    // Use stored checkout option to determine total
+    if (currentCheckoutOption === 2 && currentCheckoutProduct) {
+        // Single product checkout
+        return currentCheckoutProduct.soluong * currentCheckoutProduct.price + PHIVANCHUYEN;
+    }
+    // Cart checkout
+    return getCartTotal() + PHIVANCHUYEN;
+}
+
+// Function to apply coupon discount
+function applyCouponDiscount() {
+    let couponInput = document.getElementById('coupon-code');
+    let couponMessage = document.getElementById('coupon-message');
+    let discountDisplay = document.getElementById('discount-display');
+    let discountAmountEl = document.getElementById('discount-amount');
+    
+    let code = couponInput.value.trim();
+    
+    // Validate input
+    if (code === '') {
+        couponMessage.textContent = 'Vui lòng nhập mã giảm giá!';
+        couponMessage.className = 'coupon-message error';
+        return;
+    }
+    
+    if (!/^\d{6}$/.test(code)) {
+        couponMessage.textContent = 'Mã giảm giá phải là 6 chữ số!';
+        couponMessage.className = 'coupon-message error';
+        return;
+    }
+    
+    // Call API to validate coupon
+    let formData = new FormData();
+    formData.append('action', 'validate');
+    formData.append('code', code);
+    
+    fetch('api/coupon.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.valid) {
+            // Coupon is valid
+            appliedCoupon = code;
+            let discountPercent = data.discount_percent;
+            
+            // Calculate discount amount
+            let total = getTotalWithShipping();
+            discountAmount = total * (discountPercent / 100);
+            
+            // Update UI
+            couponMessage.textContent = data.message;
+            couponMessage.className = 'coupon-message success';
+            discountDisplay.style.display = 'flex';
+            discountAmountEl.textContent = '-' + vnd(discountAmount);
+            
+            // Update total price
+            let newTotal = total - discountAmount;
+            priceFinal.innerText = vnd(newTotal);
+            
+            // Store discount info for order
+            localStorage.setItem('appliedCoupon', JSON.stringify({
+                code: code,
+                discountPercent: discountPercent,
+                discountAmount: discountAmount
+            }));
+        } else {
+            // Coupon is invalid
+            couponMessage.textContent = data.message;
+            couponMessage.className = 'coupon-message error';
+            discountDisplay.style.display = 'none';
+            appliedCoupon = null;
+            discountAmount = 0;
+            
+            // Reset total price
+            let total = getTotalWithShipping();
+            priceFinal.innerText = vnd(total);
+            localStorage.removeItem('appliedCoupon');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        couponMessage.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        couponMessage.className = 'coupon-message error';
+    });
+}
+
+// Add event listener for apply coupon button
+document.addEventListener('DOMContentLoaded', function() {
+    let applyBtn = document.getElementById('apply-coupon-btn');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyCouponDiscount);
+    }
+    
+    // Allow pressing Enter to apply coupon
+    let couponInput = document.getElementById('coupon-code');
+    if (couponInput) {
+        couponInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyCouponDiscount();
+            }
+        });
+    }
+});
 // Trang thanh toan
 function thanhtoanpage(option,product) {
+    // Store checkout option for coupon calculation
+    currentCheckoutOption = option;
+    currentCheckoutProduct = product || null;
+    
+    // Reset coupon when opening checkout
+    appliedCoupon = null;
+    discountAmount = 0;
+    localStorage.removeItem('appliedCoupon');
+    let couponInput = document.getElementById('coupon-code');
+    let couponMessage = document.getElementById('coupon-message');
+    let discountDisplay = document.getElementById('discount-display');
+    if (couponInput) couponInput.value = '';
+    if (couponMessage) couponMessage.textContent = '';
+    if (discountDisplay) discountDisplay.style.display = 'none';
     // Xu ly ngay nhan hang
     let today = new Date();
     let ngaymai = new Date();
@@ -96,13 +224,34 @@ function thanhtoanpage(option,product) {
             item.style.display = "none";
         });
         tudenlayGroup.style.display = "block";
-        switch (option) {
-            case 1:
-                priceFinal.innerText = vnd(getCartTotal());
-                break;
-            case 2:
-                priceFinal.innerText = vnd((product.soluong * product.price));
-                break;
+        
+        // Calculate total without shipping for pickup
+        let total = 0;
+        if (currentCheckoutOption === 2 && currentCheckoutProduct) {
+            total = currentCheckoutProduct.soluong * currentCheckoutProduct.price;
+        } else {
+            total = getCartTotal();
+        }
+        
+        // Apply coupon discount if exists
+        if (appliedCoupon && discountAmount > 0) {
+            // Recalculate discount for new total (without shipping)
+            let newDiscountAmount = total * 0.1; // 10%
+            discountAmount = newDiscountAmount;
+            priceFinal.innerText = vnd(total - newDiscountAmount);
+            
+            // Update stored coupon info
+            localStorage.setItem('appliedCoupon', JSON.stringify({
+                code: appliedCoupon,
+                discountPercent: 10,
+                discountAmount: newDiscountAmount
+            }));
+            
+            // Update discount display
+            let discountAmountEl = document.getElementById('discount-amount');
+            if (discountAmountEl) discountAmountEl.textContent = '-' + vnd(newDiscountAmount);
+        } else {
+            priceFinal.innerText = vnd(total);
         }
     })
 
@@ -113,13 +262,29 @@ function thanhtoanpage(option,product) {
         chkShip.forEach(item => {
             item.style.display = "flex";
         });
-        switch (option) {
-            case 1:
-                priceFinal.innerText = vnd(getCartTotal() + PHIVANCHUYEN);
-                break;
-            case 2:
-                priceFinal.innerText = vnd((product.soluong * product.price) + PHIVANCHUYEN);
-                break;
+        
+        // Calculate total with shipping for delivery
+        let total = getTotalWithShipping();
+        
+        // Apply coupon discount if exists
+        if (appliedCoupon && discountAmount > 0) {
+            // Recalculate discount for new total (with shipping)
+            let newDiscountAmount = total * 0.1; // 10%
+            discountAmount = newDiscountAmount;
+            priceFinal.innerText = vnd(total - newDiscountAmount);
+            
+            // Update stored coupon info
+            localStorage.setItem('appliedCoupon', JSON.stringify({
+                code: appliedCoupon,
+                discountPercent: 10,
+                discountAmount: newDiscountAmount
+            }));
+            
+            // Update discount display
+            let discountAmountEl = document.getElementById('discount-amount');
+            if (discountAmountEl) discountAmountEl.textContent = '-' + vnd(newDiscountAmount);
+        } else {
+            priceFinal.innerText = vnd(total);
         }
     })
 
@@ -271,6 +436,8 @@ async function xulyDathang(product) {
     let order = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
     let madon = createId(order);
     let tongtien = 0;
+    let phiVanChuyen = 0;
+    let giamGia = 0;
     
     // Handle product(s)
     if(product == undefined) {
@@ -287,7 +454,23 @@ async function xulyDathang(product) {
         product.price = getpriceProduct(product.id);
         tongtien += product.price * product.soluong;
         orderDetails.push(product);
-    }   
+    }
+    
+    // Add shipping fee if delivery is selected (not pickup)
+    if(tudenlay && !tudenlay.classList.contains("active")) {
+        // Delivery option - add shipping fee
+        phiVanChuyen = PHIVANCHUYEN;
+    }
+    
+    // Apply coupon discount if available
+    let couponData = localStorage.getItem('appliedCoupon');
+    if(couponData) {
+        let coupon = JSON.parse(couponData);
+        giamGia = coupon.discountAmount || 0;
+    }
+    
+    // Calculate total with shipping and discount
+    let tongtienSauGiam = tongtien + phiVanChuyen - giamGia;   
     
     let tennguoinhan = document.querySelector("#tennguoinhan").value.trim();
     let sdtnhan = document.querySelector("#sdtnhan").value.trim();
@@ -344,7 +527,9 @@ async function xulyDathang(product) {
             sdtnhan: sdtnhan,
             diachinhan: diachinhan,
             thoigiandat: new Date(),
-            tongtien:tongtien,
+            tongtien: tongtienSauGiam,
+            phiVanChuyen: phiVanChuyen,
+            giamGia: giamGia,
             trangthai: 0
         }
     
@@ -380,6 +565,22 @@ async function xulyDathang(product) {
             //}
         
 
+        // Mark coupon as used if applied
+        let couponData = localStorage.getItem('appliedCoupon');
+        if (couponData) {
+            let coupon = JSON.parse(couponData);
+            let formDataCoupon = new FormData();
+            formDataCoupon.append('action', 'use');
+            formDataCoupon.append('code', coupon.code);
+            
+            fetch('api/coupon.php', {
+                method: 'POST',
+                body: formDataCoupon
+            }).then(() => {
+                localStorage.removeItem('appliedCoupon');
+            });
+        }
+        
         setTimeout((e) => {
             window.location.reload();
         }, 2000);  

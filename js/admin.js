@@ -647,6 +647,16 @@ function detailOrder(id) {
                 <span class="detail-order-item-t"><i class="fa-light fa-note-sticky"></i> Ghi chú</span>
                 <p class="detail-order-item-b">${order.ghichu}</p>
             </li>
+            ${order.phiVanChuyen > 0 ? `
+            <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-truck"></i> Phí vận chuyển</span>
+                <span class="detail-order-item-right">${vnd(order.phiVanChuyen)}</span>
+            </li>` : ''}
+            ${order.giamGia > 0 ? `
+            <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-tag"></i> Giảm giá</span>
+                <span class="detail-order-item-right" style="color: #27ae60;">-${vnd(order.giamGia)}</span>
+            </li>` : ''}
         </ul>
     </div>`;
     document.querySelector(".modal-detail-order").innerHTML = spHtml;

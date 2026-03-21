@@ -1194,10 +1194,46 @@ document.getElementById('subscribe-btn').addEventListener('click', function() {
         return;
     }
     
-    // If logged in and email valid - show success
+    // If logged in and email valid - create coupon via API
     messageEl.textContent = '';
-    toast({ title: 'Thành công', message: 'Đăng ký nhận mã giảm giá thành công! Mã: SAVE10', type: 'success', duration: 3000 });
-    emailInput.value = '';
+    
+    // Call API to create coupon
+    let formData = new FormData();
+    formData.append('action', 'create');
+    formData.append('email', email);
+    
+    fetch('api/coupon.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            toast({ 
+                title: 'Thành công', 
+                message: 'Đăng ký nhận mã giảm giá thành công! Mã: ' + data.code + ' (Giảm ' + data.discount_percent + '%)', 
+                type: 'success', 
+                duration: 6000 // 6 seconds for user to remember the code
+            });
+            emailInput.value = '';
+        } else {
+            toast({ 
+                title: 'Lỗi', 
+                message: data.message || 'Không thể tạo mã giảm giá', 
+                type: 'error', 
+                duration: 3000 
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toast({ 
+            title: 'Lỗi', 
+            message: 'Có lỗi xảy ra khi tạo mã giảm giá', 
+            type: 'error', 
+            duration: 3000 
+        });
+    });
 });
 
 // Clear error message when user starts typing
@@ -1393,6 +1429,16 @@ function detailOrder(id) {
                 <span class="detail-order-item-t"><i class="fa-light fa-note-sticky"></i> Ghi chú</span>
                 <p class="detail-order-item-b">${order.ghichu}</p>
             </li>
+            ${order.phiVanChuyen > 0 ? `
+            <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-truck"></i> Phí vận chuyển</span>
+                <span class="detail-order-item-right">${vnd(order.phiVanChuyen)}</span>
+            </li>` : ''}
+            ${order.giamGia > 0 ? `
+            <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-tag"></i> Giảm giá</span>
+                <span class="detail-order-item-right" style="color: #27ae60;">-${vnd(order.giamGia)}</span>
+            </li>` : ''}
         </ul>
     </div>`;
     document.querySelector(".modal-detail-order").innerHTML = spHtml;

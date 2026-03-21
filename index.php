@@ -794,6 +794,18 @@ session_start();
                 <p class="checkout-content-label">Đơn hàng</p>
                 <div class="bill-total" id="list-order-checkout">
                 </div>
+                <div class="coupon-section">
+                    <p class="checkout-content-label">Mã giảm giá</p>
+                    <div class="coupon-input-group">
+                        <input type="text" id="coupon-code" class="coupon-input" placeholder="Nhập mã giảm giá (6 số)" maxlength="6">
+                        <button type="button" id="apply-coupon-btn" class="apply-coupon-btn">Áp dụng</button>
+                    </div>
+                    <div id="coupon-message" class="coupon-message"></div>
+                    <div id="discount-display" class="discount-display" style="display: none;">
+                        <span class="discount-label">Giảm giá:</span>
+                        <span class="discount-value" id="discount-amount">0</span>
+                    </div>
+                </div>
                 <div class="bill-payment">
                     <div class="total-bill-order">
                     </div>

@@ -30,14 +30,21 @@ if ($conn->connect_error) {
     die(json_encode(["success" => false, "message" => "Kết nối cơ sở dữ liệu thất bại!"]));
 }
 
+// Add columns if they don't exist
+$conn->query("ALTER TABLE `order` ADD COLUMN IF NOT EXISTS `phiVanChuyen` INT(11) DEFAULT 0");
+$conn->query("ALTER TABLE `order` ADD COLUMN IF NOT EXISTS `giamGia` INT(11) DEFAULT 0");
+
 // Lấy dữ liệu từ yêu cầu POST
 $order = json_decode($_POST['order'], true);
 $orderDetails = json_decode($_POST['orderDetails'], true);
 
 // Chuẩn bị câu lệnh SQL để thêm đơn hàng vào bảng 'order'
-$sqlOrder = "INSERT INTO `order` (id, khachhang, hinhthucgiao, ngaygiaohang, thoigiangiao, ghichu, tenguoinhan, sdtnhan, diachinhan, thoigiandat, tongtien, trangthai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$phiVanChuyen = isset($order['phiVanChuyen']) ? $order['phiVanChuyen'] : 0;
+$giamGia = isset($order['giamGia']) ? $order['giamGia'] : 0;
+
+$sqlOrder = "INSERT INTO `order` (id, khachhang, hinhthucgiao, ngaygiaohang, thoigiangiao, ghichu, tenguoinhan, sdtnhan, diachinhan, thoigiandat, tongtien, phiVanChuyen, giamGia, trangthai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $stmtOrder = $conn->prepare($sqlOrder);
-$stmtOrder->bind_param("ssssssssssii", $order['id'], $order['khachhang'], $order['hinhthucgiao'], $order['ngaygiaohang'], $order['thoigiangiao'], $order['ghichu'], $order['tenguoinhan'], $order['sdtnhan'], $order['diachinhan'], $order['thoigiandat'], $order['tongtien'], $order['trangthai']);
+$stmtOrder->bind_param("sssssssssssiii", $order['id'], $order['khachhang'], $order['hinhthucgiao'], $order['ngaygiaohang'], $order['thoigiangiao'], $order['ghichu'], $order['tenguoinhan'], $order['sdtnhan'], $order['diachinhan'], $order['thoigiandat'], $order['tongtien'], $phiVanChuyen, $giamGia, $order['trangthai']);
 
 // Xóa
 $sql = "DELETE FROM `orderDetails`;";
