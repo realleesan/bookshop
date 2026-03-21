@@ -477,8 +477,15 @@ signupButton.addEventListener('click', () => {
                 closeModal();
                 kiemtradangnhap();
                 updateAmount();
+                // Redirect to account info page to add email and address
                 setTimeout((e) => {
-                    window.location.reload();
+                    document.getElementById('trangchu').classList.add('hide');
+                    document.getElementById('home-products').classList.add('hide');
+                    document.getElementById('home-title').classList.add('hide');
+                    document.getElementById('gioithieu').style.display = 'none';
+                    document.getElementById('account-user').classList.add('open');
+                    document.getElementById('tracuu').style.display = 'none';
+                    userInfo();
                 }, 2000); 
             } else {
                 toast({ title: 'Thất bại', message: 'Tài khoản đã tồn tại !', type: 'error', duration: 3000 });
@@ -647,21 +654,45 @@ function changeInformation() {
     let infoname = document.getElementById('infoname');
     let infoemail = document.getElementById('infoemail');
     let infoaddress = document.getElementById('infoaddress');
+    
+    // Get current values to compare
+    let currentFullname = user.fullname || '';
+    let currentEmail = user.email || '';
+    let currentAddress = user.address || '';
+    
+    let newFullname = infoname.value.trim();
+    let newEmail = infoemail.value.trim();
+    let newAddress = infoaddress.value.trim();
+    
+    // Check if anything changed
+    if (newFullname === currentFullname && newEmail === currentEmail && newAddress === currentAddress) {
+        toast({ title: 'Thông báo', message: 'Bạn chưa thay đổi thông tin nào!', type: 'warning', duration: 3000 });
+        return;
+    }
 
-    user.fullname = infoname.value;
-    if (infoemail.value.length > 0) {
-        if (!emailIsValid(infoemail.value)) {
-            document.querySelector('.inforemail-error').innerHTML = 'Vui lòng nhập lại email!';
-            infoemail.value = '';
+    user.fullname = newFullname;
+    
+    // Validate and set email
+    if (newEmail.length > 0) {
+        if (!emailIsValid(newEmail)) {
+            document.querySelector('.inforemail-error').innerHTML = 'Email không hợp lệ!';
+            return;
         } else {
-            user.email = infoemail.value;
-            document.querySelector('.inforemail-error').innerHTML = ''; // Xóa lỗi nếu email hợp lệ
+            user.email = newEmail;
+            document.querySelector('.inforemail-error').innerHTML = '';
         }
+    } else {
+        user.email = '';
     }
 
-    if (infoaddress.value.length > 0) {
-        user.address = infoaddress.value;
+    // Validate address (minimum 6 characters if not empty)
+    if (newAddress.length > 0 && newAddress.length < 6) {
+        toast({ title: 'Lỗi', message: 'Địa chỉ phải có ít nhất 6 ký tự!', type: 'error', duration: 3000 });
+        return;
     }
+    
+    // Allow clearing address (save as empty)
+    user.address = newAddress;
 
     let vitri = accounts.findIndex(item => item.phone == user.phone);
     accounts[vitri].fullname = user.fullname;
@@ -1159,6 +1190,89 @@ document.getElementById('subscribe-btn').addEventListener('click', function() {
 // Clear error message when user starts typing
 document.getElementById('subscribe-email').addEventListener('input', function() {
     document.getElementById('subscribe-message').textContent = '';
+});
+
+// Forgot Password Modal Functions
+function showForgotPassword() {
+    let formsg = document.querySelector('.modal.signup-login');
+    formsg.classList.remove('open');
+    
+    let forgotModal = document.getElementById('forgot-password-modal');
+    forgotModal.classList.add('open');
+    document.body.style.overflow = "hidden";
+}
+
+function closeForgotPassword() {
+    let forgotModal = document.getElementById('forgot-password-modal');
+    forgotModal.classList.remove('open');
+    document.body.style.overflow = "auto";
+    // Clear form
+    document.getElementById('forgot-email').value = '';
+    document.querySelector('.form-message-forgot').textContent = '';
+}
+
+// Close modal only when clicking on the background (not on the modal content)
+function closeForgotPasswordModal(event) {
+    if (event.target.classList.contains('forgot-password-modal')) {
+        closeForgotPassword();
+    }
+}
+
+function showLoginFromForgot() {
+    closeForgotPassword();
+    let formsg = document.querySelector('.modal.signup-login');
+    let container = document.querySelector('.signup-login .modal-container');
+    formsg.classList.add('open');
+    container.classList.add('active');
+}
+
+// Forgot Password Form Submit
+document.getElementById('forgot-password-btn').addEventListener('click', function() {
+    let email = document.getElementById('forgot-email').value.trim();
+    let messageEl = document.querySelector('.form-message-forgot');
+    
+    // Validate email
+    if (email === '') {
+        messageEl.textContent = 'Vui lòng nhập email!';
+        return;
+    }
+    
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        messageEl.textContent = 'Email không hợp lệ!';
+        return;
+    }
+    
+    // Send request to server
+    fetch('quenpass.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'btn1=1&email=' + encodeURIComponent(email)
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data.includes('thành công') || data.includes('Đã gửi')) {
+            toast({ title: 'Thành công', message: 'Mật khẩu đã được gửi đến email của bạn!', type: 'success', duration: 5000 });
+            closeForgotPassword();
+        } else if (data.includes('không phải là thành viên') || data.includes('không tồn tại')) {
+            messageEl.textContent = 'Email này không phải là thành viên!';
+        } else if (data.includes('không đúng')) {
+            messageEl.textContent = 'Email không đúng định dạng!';
+        } else {
+            toast({ title: 'Lỗi', message: 'Có lỗi xảy ra. Vui lòng thử lại!', type: 'error', duration: 3000 });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toast({ title: 'Lỗi', message: 'Không thể kết nối đến server!', type: 'error', duration: 3000 });
+    });
+});
+
+// Clear error when typing
+document.getElementById('forgot-email').addEventListener('input', function() {
+    document.querySelector('.form-message-forgot').textContent = '';
 });
 
 // Hàm hiển thị đơn hàng

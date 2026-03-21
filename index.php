@@ -372,11 +372,34 @@ session_start();
                         <button class="form-submit" id="login-button">Đăng nhập</button>
                     </form>
                     <p class="change-login">Bạn chưa có tài khoản ? <a href="javascript:;" class="signup-link">Đăng kí
-                            ngay</a><br><a href="quenpass.php" class="">Quên mật khẩu</a></p>
+                            ngay</a><br><a href="javascript:;" class="forgot-password-link" onclick="showForgotPassword()">Quên mật khẩu</a></p>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Forgot Password Modal -->
+    <div class="modal signup-login forgot-password-modal" id="forgot-password-modal" onclick="closeForgotPasswordModal(event)">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <button class="form-close" onclick="closeForgotPassword()"><i class="fa-regular fa-xmark"></i></button>
+            <div class="forms mdl-cnt">
+                <div class="form-content login">
+                    <h3 class="form-title">QUÊN MẬT KHẨU</h3>
+                    <p class="form-description">Nhập email của bạn để lấy lại mật khẩu</p>
+                    <form action="" class="login-form">
+                        <div class="form-group">
+                            <label for="forgot-email" class="form-label">Email</label>
+                            <input id="forgot-email" name="forgot-email" type="email" placeholder="Nhập email của bạn" class="form-control">
+                            <span class="form-message-forgot form-message"></span>
+                        </div>
+                        <button type="button" class="form-submit" id="forgot-password-btn">Gửi yêu cầu</button>
+                    </form>
+                    <p class="change-login"><a href="javascript:;" onclick="showLoginFromForgot()"> Quay lại đăng nhập</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="modal-cart">
         <div class="cart-container">
             <div class="cart-header">

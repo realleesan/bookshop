@@ -1,12 +1,20 @@
 <?php
+// Check if it's an AJAX request
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+if ($isAjax) {
+    header('Content-Type: application/json');
+}
+
 $thongbao = "";
+$success = false;
 
 if (isset($_POST['btn1'])) {
     $email = trim(strip_tags($_POST['email'])); // Tiếp nhận email và loại bỏ HTML tags
 
     // Kiểm tra định dạng email
     if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-        $thongbao .= "Email không đúng <br>";
+        $thongbao .= "Email không đúng<br>";
     }
 
     // Kiểm tra email có phải là thành viên không
@@ -16,7 +24,7 @@ if (isset($_POST['btn1'])) {
     $row = $kq->fetch_row();  // Retrieve the row with the password
 
     if (!$row) {
-        $thongbao .= "Email này không phải là thành viên <br>";
+        $thongbao .= "Email này không phải là thành viên<br>";
     } else {
         $pass_hien_tai = $row[0]; // Get the existing password
 
@@ -51,15 +59,25 @@ if (isset($_POST['btn1'])) {
             $mail->Subject = 'Mật khẩu hiện tại của bạn';
             $mail->Body = "Đây là mật khẩu hiện tại của bạn: <b>{$pass_hien_tai}</b>";
             $mail->send();
-            $thongbao .= "Đã gửi password đến mail thành công<br>";
+            $thongbao .= "Đã gửi password đến mail thành công";
+            $success = true;
         } catch (Exception $e) {
             $thongbao .= "Lỗi khi gửi thư: " . $mail->ErrorInfo;
         }
     }
+    
+    if ($isAjax) {
+        echo json_encode([
+            'success' => $success,
+            'message' => $thongbao
+        ]);
+        exit;
+    }
 }
-?>
 
-<?php if ($thongbao != "") { ?>
+// If not AJAX and there's an error, show the old form
+if ($thongbao != "" && !$isAjax) {
+?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <div class="col-8 m-auto">
     <div class="alert alert-danger mt-5 text-center">
