@@ -232,8 +232,15 @@ async function xulyDathang(product) {
     if(tudenlay.classList.contains("active")){
         let chinhanh1 = document.querySelector("#chinhanh-1");
         let chinhanh2 = document.querySelector("#chinhanh-2");
+        
+        // Validate branch selection
+        if(!chinhanh1.checked && !chinhanh2.checked) {
+            toast({ title: 'Chú ý', message: 'Vui lòng chọn chi nhánh để lấy hàng!', type: 'warning', duration: 4000 });
+            return;
+        }
+        
         if(chinhanh1.checked) {
-            diachinhan = "Quận 12, Thành phố Hồ Chí Minh";
+            diachinhan = "Phường Từ Liêm, TP Hà Nội";
         }
         if(chinhanh2.checked) {
             diachinhan = "Quận Gò Vấp, Thành phố Hồ Chí Minh";
@@ -241,13 +248,23 @@ async function xulyDathang(product) {
         hinhthucgiao = tudenlay.innerText;
     }
 
-    // Thời gian nhận hàng
-    if(giaongay.checked) {
-        thoigiangiao = "Giao ngay khi xong";
-    }
-
-    if(giaovaogio.checked) {
-        thoigiangiao = document.querySelector(".choise-time").value;
+    // Thời gian nhận hàng (chỉ áp dụng cho giao tận nơi)
+    if(tudenlay.classList.contains("active")) {
+        // Với hình thức tự đến lấy, không cần chọn thời gian giao
+        thoigiangiao = "Đến lấy tại cửa hàng";
+    } else {
+        // Với hình thức giao tận nơi, bắt buộc chọn thời gian
+        if(giaongay.checked) {
+            thoigiangiao = "Giao ngay khi xong";
+        } else if(giaovaogio.checked) {
+            thoigiangiao = document.querySelector(".choise-time").value;
+        }
+        
+        // Validate delivery time selection
+        if (thoigiangiao === "") {
+            toast({ title: 'Chú ý', message: 'Vui lòng chọn thời gian giao hàng!', type: 'warning', duration: 4000 });
+            return;
+        }
     }
 
     let orderDetails = localStorage.getItem("orderDetails") ? JSON.parse(localStorage.getItem("orderDetails")) : [];
@@ -272,12 +289,50 @@ async function xulyDathang(product) {
         orderDetails.push(product);
     }   
     
-    let tennguoinhan = document.querySelector("#tennguoinhan").value;
-    let sdtnhan = document.querySelector("#sdtnhan").value;
-
-    if(tennguoinhan == "" || sdtnhan == "" || diachinhan == "") {
-        toast({ title: 'Chú ý', message: 'Vui lòng nhập đầy đủ thông tin !', type: 'warning', duration: 4000 });
-    } else {
+    let tennguoinhan = document.querySelector("#tennguoinhan").value.trim();
+    let sdtnhan = document.querySelector("#sdtnhan").value.trim();
+    
+    // Chỉ lấy địa chỉ từ input khi chọn giao tận nơi
+    if(giaotannoi.classList.contains("active")) {
+        diachinhan = document.querySelector("#diachinhan").value.trim();
+    }
+    
+    // Validate receiver name (only letters, minimum 3 characters)
+    let nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+    if (tennguoinhan === "") {
+        toast({ title: 'Chú ý', message: 'Vui lòng nhập tên người nhận!', type: 'warning', duration: 4000 });
+        return;
+    } else if (tennguoinhan.length < 3) {
+        toast({ title: 'Lỗi', message: 'Tên người nhận phải có ít nhất 3 ký tự!', type: 'error', duration: 4000 });
+        return;
+    } else if (!nameRegex.test(tennguoinhan)) {
+        toast({ title: 'Lỗi', message: 'Tên người nhận chỉ được chứa chữ cái!', type: 'error', duration: 4000 });
+        return;
+    }
+    
+    // Validate phone (exactly 10 digits)
+    let phoneRegex = /^\d{10}$/;
+    if (sdtnhan === "") {
+        toast({ title: 'Chú ý', message: 'Vui lòng nhập số điện thoại!', type: 'warning', duration: 4000 });
+        return;
+    } else if (!phoneRegex.test(sdtnhan)) {
+        toast({ title: 'Lỗi', message: 'Số điện thoại phải là 10 chữ số!', type: 'error', duration: 4000 });
+        return;
+    }
+    
+    // Validate address (minimum 6 characters) - chỉ áp dụng khi giao tận nơi
+    if(giaotannoi.classList.contains("active")) {
+        if (diachinhan === "") {
+            toast({ title: 'Chú ý', message: 'Vui lòng nhập địa chỉ giao hàng!', type: 'warning', duration: 4000 });
+            return;
+        } else if (diachinhan.length < 6) {
+            toast({ title: 'Lỗi', message: 'Địa chỉ phải có ít nhất 6 ký tự!', type: 'error', duration: 4000 });
+            return;
+        }
+    }
+    
+    // All validation passed - proceed with order
+    {
         let donhang = {
             id: madon,
             khachhang: currentUser ? currentUser.phone : "Khách hàng đặt trực tiếp",

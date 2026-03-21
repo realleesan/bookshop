@@ -1181,6 +1181,19 @@ document.getElementById('subscribe-btn').addEventListener('click', function() {
         return;
     }
     
+    // Check if user has email in their account
+    let user = JSON.parse(currentUser);
+    if (!user.email || user.email === '') {
+        messageEl.textContent = 'Vui lòng cập nhật email trong thông tin tài khoản trước!';
+        return;
+    }
+    
+    // Check if email matches logged-in user's email
+    if (user.email.toLowerCase() !== email.toLowerCase()) {
+        messageEl.textContent = 'Email này không phải của tài khoản hiện tại!';
+        return;
+    }
+    
     // If logged in and email valid - show success
     messageEl.textContent = '';
     toast({ title: 'Thành công', message: 'Đăng ký nhận mã giảm giá thành công! Mã: SAVE10', type: 'success', duration: 3000 });

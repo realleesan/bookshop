@@ -754,7 +754,7 @@ session_start();
                             </div>
                             <div class="delivery-time">
                                 <input type="radio" name="chinhanh" id="chinhanh-2" class="radio">
-                                <label for="chinhanh-2">Quận Gò Vấp, TP Hà Nội</label>
+                                <label for="chinhanh-2">Quận Gò Vấp, Thành phố Hồ Chí Minh</label>
                             </div>
                         </div>
                         <div class="content-group">
