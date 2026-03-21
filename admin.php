@@ -136,7 +136,6 @@
                             <option>Lớp 11</option>
                             <option>Lớp 12</option>
                             <option>Sách khác</option>
-                            <option>Đã xóa</option>
                         </select>
                     </div>
                     <div class="admin-control-center">

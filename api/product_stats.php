@@ -85,10 +85,10 @@ elseif ($method === 'GET') {
     }
     
     $sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count 
-            FROM products";
+            FROM products WHERE status = 1";
     
     if (!empty($category)) {
-        $sql .= " WHERE category LIKE '%" . $conn->real_escape_string($category) . "%'";
+        $sql .= " AND category LIKE '%" . $conn->real_escape_string($category) . "%'";
     }
     
     $sql .= " ORDER BY " . $sortBy . " DESC LIMIT 10";

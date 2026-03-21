@@ -123,9 +123,8 @@ function showProductArr(arr) {
         productHtml = `<div class="no-result"><div class="no-result-i"><i class="fa-light fa-face-sad-cry"></i></div><div class="no-result-h">Không có sản phẩm để hiển thị</div></div>`;
     } else {
         arr.forEach(product => {
-            let btnCtl = product.status == 1 ? 
-            `<button class="btn-delete" onclick="deleteProduct(${product.id})"><i class="fa-regular fa-trash"></i></button>` :
-            `<button class="btn-delete" onclick="changeStatusProduct(${product.id})"><i class="fa-regular fa-eye"></i></button>`;
+            // Always show delete button - no restore for deleted products
+            let btnCtl = `<button class="btn-delete" onclick="deleteProduct(${product.id})"><i class="fa-regular fa-trash"></i></button>`;
             productHtml += `
             <div class="list">
                     <div class="list-left">
@@ -159,9 +158,8 @@ function showProduct() {
     let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
 
     if(selectOp == "Tất cả") {
-        result = products.filter((item) => item.status == 1);
-    } else if(selectOp == "Đã xóa") {
-        result = products.filter((item) => item.status == 0);
+        // Show all active products
+        result = products;
     } else {
         result = products.filter((item) => item.category == selectOp);
     }
@@ -193,27 +191,27 @@ function createId(arr) {
     }
     return id;
 }
-// Xóa sản phẩm 
+// Xóa sản phẩm vĩnh viễn
 function deleteProduct(id) {
     let products = JSON.parse(localStorage.getItem("products"));
-    let index = products.findIndex(item => {
-        return item.id == id;
-    })
-    if (confirm("Bạn có chắc muốn xóa?") == true) {
-        products[index].status = 0;
+    if (confirm("Bạn có chắc muốn xóa vĩnh viễn sản phẩm này? Hành động này không thể hoàn tác!") == true) {
+        // Remove product from array (hard delete)
+        products = products.filter(item => item.id != id);
         
-        toast({ title: 'Success', message: 'Xóa sản phẩm thành công !', type: 'success', duration: 3000 });
+        localStorage.setItem("products", JSON.stringify(products));
+        
+        // Gửi yêu cầu AJAX tới PHP để xóa vĩnh viễn khỏi database
+        fetch('api/product_manage.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: id, action: 'permanent_delete' })
+        });
+        
+        toast({ title: 'Success', message: 'Xóa sản phẩm vĩnh viễn thành công !', type: 'success', duration: 3000 });
+        showProduct();
     }
-    localStorage.setItem("products", JSON.stringify(products));
-    // Gửi yêu cầu AJAX tới PHP để cập nhật database
-    fetch('modify_product.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: id, action: 'delete' })
-    });
-    showProduct();
 }
 
 function changeStatusProduct(id) {
@@ -549,7 +547,7 @@ function formatDate(date) {
 function showOrder(arr) {
     let orderHtml = "";
     if(arr.length == 0) {
-        orderHtml = `<td colspan="6">Không có dữ liệu</td>`
+        orderHtml = `<td colspan="7">Không có dữ liệu</td>`
     } else {
         arr.forEach((item) => {
             let status = item.trangthai == 0 ? `<span class="status-no-complete">Chưa xử lý</span>` : `<span class="status-complete">Đã xử lý</span>`;
@@ -562,13 +560,38 @@ function showOrder(arr) {
             <td>${vnd(item.tongtien)}</td>                               
             <td>${status}</td>
             <td class="control">
-            <button class="btn-detail" id="" onclick="detailOrder('${item.id}')"><i class="fa-regular fa-eye"></i> Chi tiết</button>
+            <button class="btn-detail" onclick="detailOrder('${item.id}')"><i class="fa-regular fa-eye"></i> Chi tiết</button>
+            <button class="btn-delete" onclick="deleteOrder('${item.id}')"><i class="fa-regular fa-trash"></i> Xóa</button>
             </td>
             </tr>      
             `;
         });
     }
     document.getElementById("showOrder").innerHTML = orderHtml;
+}
+
+// Delete order
+function deleteOrder(orderId) {
+    if(confirm("Bạn có chắc muốn xóa đơn hàng này? Hành động này không thể hoàn tác!") == true) {
+        let orders = JSON.parse(localStorage.getItem("order"));
+        let orderDetails = JSON.parse(localStorage.getItem("orderDetails"));
+        
+        // Remove order
+        orders = orders.filter(order => order.id != orderId);
+        
+        // Remove order details
+        if (orderDetails) {
+            orderDetails = orderDetails.filter(detail => detail.madon != orderId);
+        }
+        
+        localStorage.setItem("order", JSON.stringify(orders));
+        localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
+        
+        // Show updated list
+        showOrder(orders);
+        
+        toast({ title: 'Success', message: 'Xóa đơn hàng thành công!', type: 'success', duration: 3000 });
+    }
 }
 
 let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];

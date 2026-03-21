@@ -1,46 +1,44 @@
 // Khởi tạo danh sách sản phẩm
 function createProduct() {
-    if (localStorage.getItem('products') === null) {
-        // Sử dụng AJAX để lấy dữ liệu từ server
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "get_products.php", true);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                if (xhr.status == 200) {
-                    try {
-                        // Chuyển đổi dữ liệu JSON thành đối tượng JavaScript
-                        let products = JSON.parse(xhr.responseText);
-                        
-                        if (!Array.isArray(products)) {
-                            console.error('Products is not an array:', products);
-                            return;
-                        }
-                        
-                        // Đảm bảo rằng sản phẩm có cấu trúc chính xác
-                        products = products.map(product => {
-                            return {
-                                id: Number(product.id),             // Chuyển đổi thành số nếu cần
-                                status: Number(product.status),     // Chuyển đổi thành số nếu cần
-                                title: String(product.title),       // Đảm bảo là chuỗi
-                                img: String(product.img),           // Đảm bảo là chuỗi
-                                category: String(product.category), // Đảm bảo là chuỗi
-                                price: Number(product.price),       // Chuyển đổi thành số nếu cần
-                                desc: String(product.describes) // Đảm bảo là chuỗi
-                            };
-                        });
-
-                        // Lưu dữ liệu vào localStorage
-                        localStorage.setItem('products', JSON.stringify(products));
-                    } catch (e) {
-                        console.error('Error parsing products JSON:', e, xhr.responseText);
+    // Luôn lấy dữ liệu từ server để đảm bảo không hiển thị sản phẩm đã bị xóa
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "get_products.php", true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                try {
+                    // Chuyển đổi dữ liệu JSON thành đối tượng JavaScript
+                    let products = JSON.parse(xhr.responseText);
+                    
+                    if (!Array.isArray(products)) {
+                        console.error('Products is not an array:', products);
+                        return;
                     }
-                } else {
-                    console.error('Error fetching products:', xhr.status, xhr.responseText);
+                    
+                    // Đảm bảo rằng sản phẩm có cấu trúc chính xác
+                    products = products.map(product => {
+                        return {
+                            id: Number(product.id),             // Chuyển đổi thành số nếu cần
+                            status: Number(product.status),     // Chuyển đổi thành số nếu cần
+                            title: String(product.title),       // Đảm bảo là chuỗi
+                            img: String(product.img),           // Đảm bảo là chuỗi
+                            category: String(product.category), // Đảm bảo là chuỗi
+                            price: Number(product.price),       // Chuyển đổi thành số nếu cần
+                            desc: String(product.describes) // Đảm bảo là chuỗi
+                        };
+                    });
+
+                    // Lưu dữ liệu vào localStorage
+                    localStorage.setItem('products', JSON.stringify(products));
+                } catch (e) {
+                    console.error('Error parsing products JSON:', e, xhr.responseText);
                 }
+            } else {
+                console.error('Error fetching products:', xhr.status, xhr.responseText);
             }
-        };
-        xhr.send();
-    }
+        }
+    };
+    xhr.send();
 }
 
 // Hàm cập nhật danh sách sản phẩm từ server
