@@ -104,7 +104,12 @@ function detailProduct(index) {
         if (localStorage.getItem('currentuser')) {
             addCart(infoProduct.id);
         } else {
-            toast({ title: 'Warning', message: 'Chưa đăng nhập tài khoản !', type: 'warning', duration: 3000 });
+            toast({ title: 'Warning', message: 'Vui lòng đăng nhập để thêm vào giỏ hàng!', type: 'warning', duration: 3000 });
+            // Open login modal
+            let formsg = document.querySelector('.modal.signup-login');
+            let container = document.querySelector('.signup-login .modal-container');
+            formsg.classList.add('open');
+            container.classList.add('active');
         }
 
     })
@@ -284,6 +289,17 @@ function saveAmountCart() {
 
 // Open & Close Cart
 function openCart() {
+    // Check if user is logged in
+    if (!localStorage.getItem('currentuser')) {
+        toast({ title: 'Thông báo', message: 'Vui lòng đăng nhập để xem giỏ hàng!', type: 'warning', duration: 3000 });
+        // Open login modal
+        let formsg = document.querySelector('.modal.signup-login');
+        let container = document.querySelector('.signup-login .modal-container');
+        formsg.classList.add('open');
+        container.classList.add('active');
+        return;
+    }
+    
     showCart();
     document.querySelector('.modal-cart').classList.add('open');
     body.style.overflow = "hidden";

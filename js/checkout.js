@@ -180,24 +180,30 @@ function dathangngay() {
     let productInfo = document.getElementById("product-detail-content");
     let datHangNgayBtn = productInfo.querySelector(".button-dathangngay");
     datHangNgayBtn.onclick = () => {
-       // if(localStorage.getItem('currentuser')) {
-            let productId = datHangNgayBtn.getAttribute("data-product");
-            let soluong = parseInt(productInfo.querySelector(".buttons_added .input-qty").value);
-            let notevalue = productInfo.querySelector("#popup-detail-note").value;
-            let ghichu = notevalue == "" ? "Không có ghi chú" : notevalue;
-            let products = JSON.parse(localStorage.getItem('products'));
-            let a = products.find(item => item.id == productId);
-            a.soluong = parseInt(soluong);
-            a.note = ghichu;
-            checkoutpage.classList.add('active');
-            thanhtoanpage(2,a);
-            closeCart();
-            let modal = document.querySelector('.modal.product-detail');
-            modal.classList.remove('open');
-            body.style.overflow = "hidden"
-        //} else {
-          //  toast({ title: 'Warning', message: 'Chưa đăng nhập tài khoản !', type: 'warning', duration: 3000 });
-       // }
+        if(!localStorage.getItem('currentuser')) {
+            toast({ title: 'Warning', message: 'Vui lòng đăng nhập để mua hàng!', type: 'warning', duration: 3000 });
+            // Open login modal
+            let formsg = document.querySelector('.modal.signup-login');
+            let container = document.querySelector('.signup-login .modal-container');
+            formsg.classList.add('open');
+            container.classList.add('active');
+            return;
+        }
+        
+        let productId = datHangNgayBtn.getAttribute("data-product");
+        let soluong = parseInt(productInfo.querySelector(".buttons_added .input-qty").value);
+        let notevalue = productInfo.querySelector("#popup-detail-note").value;
+        let ghichu = notevalue == "" ? "Không có ghi chú" : notevalue;
+        let products = JSON.parse(localStorage.getItem('products'));
+        let a = products.find(item => item.id == productId);
+        a.soluong = parseInt(soluong);
+        a.note = ghichu;
+        checkoutpage.classList.add('active');
+        thanhtoanpage(2,a);
+        closeCart();
+        let modal = document.querySelector('.modal.product-detail');
+        modal.classList.remove('open');
+        body.style.overflow = "hidden"
     }
 }
 
