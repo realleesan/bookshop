@@ -581,6 +581,19 @@ async function xulyDathang(product) {
             });
         }
         
+        // Update sold count for each product in order
+        orderDetails.forEach(item => {
+            let formDataSold = new FormData();
+            formDataSold.append('action', 'increment_sold');
+            formDataSold.append('product_id', item.id);
+            formDataSold.append('quantity', item.soluong);
+            
+            fetch('api/product_stats.php', {
+                method: 'POST',
+                body: formDataSold
+            });
+        });
+        
         setTimeout((e) => {
             window.location.reload();
         }, 2000);  

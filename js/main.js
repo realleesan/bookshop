@@ -1095,20 +1095,75 @@ function paginationChange(page, productAll, currentPage) {
 }
 
 // Hiển thị chuyên mục
+let currentCategory = '';
+
 function showCategory(category) {
     document.getElementById('trangchu').classList.remove('hide');
     document.getElementById('gioithieu').style.display = 'none';
     document.getElementById('tracuu').style.display = 'none';
     document.getElementById('account-user').classList.remove('open');
     document.getElementById('order-history').classList.remove('open');
-    // document.body.style.overflow = '';
-    let productSearch = productAll.filter(value => {
-        return value.category.toString().toUpperCase().includes(category.toUpperCase());
-    })
-    let currentPageSeach = 1;
-    displayList(productSearch, perPage, currentPageSeach);
-    setupPagination(productSearch, perPage, currentPageSeach);
+    
+    // Store current category for ranking
+    currentCategory = category;
+    
+    // Show ranking tabs for category pages
+    let rankingTabs = document.getElementById('ranking-tabs');
+    if (category === 'Lớp 10' || category === 'Lớp 11' || category === 'Lớp 12' || category === 'Sách khác') {
+        rankingTabs.style.display = 'flex';
+        // Default to best selling
+        showRanking('sold');
+    } else {
+        rankingTabs.style.display = 'none';
+        // Original behavior for other categories
+        let productSearch = productAll.filter(value => {
+            return value.category.toString().toUpperCase().includes(category.toUpperCase());
+        });
+        let currentPageSeach = 1;
+        displayList(productSearch, perPage, currentPageSeach);
+        setupPagination(productSearch, perPage, currentPageSeach);
+    }
+    
     document.getElementById("home-title").scrollIntoView();
+}
+
+// Show products by ranking
+function showRanking(type) {
+    // Update active tab
+    let tabs = document.querySelectorAll('.ranking-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Determine sort field
+    let sortField = 'sold_count';
+    if (type === 'like') sortField = 'like_count';
+    else if (type === 'search') sortField = 'search_count';
+    
+    // Fetch products sorted by ranking
+    fetch(`api/product_stats.php?category=${currentCategory}&sort=${sortField}`)
+        .then(response => response.json())
+        .then(products => {
+            if (products.length > 0) {
+                displayList(products, perPage, 1);
+                setupPagination(products, perPage, 1);
+            } else {
+                // No ranking data yet, show all products in category
+                let productSearch = productAll.filter(value => {
+                    return value.category.toString().toUpperCase().includes(currentCategory.toUpperCase());
+                });
+                displayList(productSearch, perPage, 1);
+                setupPagination(productSearch, perPage, 1);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Fallback to original behavior
+            let productSearch = productAll.filter(value => {
+                return value.category.toString().toUpperCase().includes(currentCategory.toUpperCase());
+            });
+            displayList(productSearch, perPage, 1);
+            setupPagination(productSearch, perPage, 1);
+        });
 }
 
 function showGioiThieu() {

@@ -168,6 +168,12 @@ session_start();
             <div class="home-title-block" id="home-title">
                 <h2 class="home-title">Khám phá sách giáo khoa của chúng tôi</h2>
             </div>
+            <!-- Ranking Tabs -->
+            <div class="ranking-tabs" id="ranking-tabs" style="display: none;">
+                <button class="ranking-tab active" data-sort="sold_count" onclick="showRanking('sold')">Bán chạy</button>
+                <button class="ranking-tab" data-sort="like_count" onclick="showRanking('like')">Ưa thích</button>
+                <button class="ranking-tab" data-sort="search_count" onclick="showRanking('search')">Tìm kiếm nhiều</button>
+            </div>
             <div class="home-products" id="home-products">
             </div>
             <div class="page-nav" id="page-products">

@@ -33,8 +33,13 @@ if ($conn->connect_error) {
 // Set charset to UTF-8
 $conn->set_charset("utf8");
 
+// Add ranking columns if they don't exist
+$conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `search_count` INT(11) DEFAULT 0");
+$conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `like_count` INT(11) DEFAULT 0");
+$conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `sold_count` INT(11) DEFAULT 0");
+
 // Truy vấn dữ liệu từ bảng sản phẩm
-$sql = "SELECT id, status, title, img, category, price, describes FROM products";
+$sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products";
 $result = $conn->query($sql);
 
 $products = array();
