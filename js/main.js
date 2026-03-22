@@ -70,6 +70,9 @@ function detailProduct(index) {
             </div>
         </div>
         <p class="product-description">${infoProduct.desc}</p>
+        <div class="product-reviews" id="product-reviews-${infoProduct.id}">
+            <div class="loading-reviews">Đang tải đánh giá...</div>
+        </div>
     </div>
     <div class="notebox">
             <p class="notebox-title">Ghi chú</p>
@@ -1443,7 +1446,7 @@ function detailOrder(id) {
                 <div class="order-product-info">
                     <h4>${detaiSP.title}</h4>
                     <p class="order-product-note"><i class="fa-light fa-pen"></i> ${item.note}</p>
-                    <p class="order-product-quantity">SL: ${item.soluong}<p>
+                    <p class="order-product-quantity">SL: ${item.soluong}<p>${order.trangthai == 1 ? `<br><button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${order.id}', '${detaiSP.title}', '${detaiSP.img}')"><i class="fa-regular fa-star"></i> Đánh giá</button>` : ''}
                 </div>
             </div>
             <div class="order-product-right">
@@ -1550,3 +1553,5 @@ document.querySelector('.prev-slide').addEventListener('click', prevSlide);
 
 // Thêm sự kiện cho nút Next
 document.querySelector('.next-slide').addEventListener('click', nextSlide);
+
+

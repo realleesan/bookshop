@@ -15,6 +15,7 @@ session_start();
     <title>Book Shop</title>
     <link href='./assets/img/iconlogo.jpg' rel='icon' type='image/x-icon' />
     <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/rating.css">
     <link rel="stylesheet" href="./assets/css/home-responsive.css">
     <link rel="stylesheet" href="./assets/css/admin-responsive.css">
     <link rel="stylesheet" href="./assets/css/toast-message.css">
@@ -290,6 +291,37 @@ session_start();
             <div class="modal-detail-bottom">               
             </div>
             </form>
+        </div>
+    </div>
+    <div class="modal rating-modal">
+        <div class="modal-container">
+            <h3 class="modal-container-title">ĐÁNH GIÁ SẢN PHẨM</h3>
+            <button class="modal-close" onclick="closeRatingModal()"><i class="fa-regular fa-xmark"></i></button>
+            <div class="rating-modal-content">
+                <div class="rating-product-info">
+                    <img id="rating-product-img" src="" alt="">
+                    <h4 id="rating-product-title"></h4>
+                </div>
+                <div class="rating-stars">
+                    <span class="rating-label">Chọn đánh giá:</span>
+                    <div class="stars">
+                        <i class="fa-regular fa-star" data-rating="1"></i>
+                        <i class="fa-regular fa-star" data-rating="2"></i>
+                        <i class="fa-regular fa-star" data-rating="3"></i>
+                        <i class="fa-regular fa-star" data-rating="4"></i>
+                        <i class="fa-regular fa-star" data-rating="5"></i>
+                    </div>
+                    <span id="rating-value-text">0/5 sao</span>
+                </div>
+                <div class="rating-comment">
+                    <span class="rating-label">Bình luận:</span>
+                    <textarea id="rating-comment" placeholder="Nhập đánh giá của bạn..." maxlength="300"></textarea>
+                    <span class="char-count">0/300 ký tự</span>
+                </div>
+                <input type="hidden" id="rating-product-id" value="">
+                <input type="hidden" id="rating-order-id" value="">
+                <button class="btn-submit-rating" onclick="submitRating()">Gửi đánh giá</button>
+            </div>
         </div>
     </div>
     <div class="modal detail-order-product">
@@ -834,6 +866,7 @@ session_start();
     <div id="toast"></div>
     <script src="./js/initialization.js?v=2"></script>
     <script src="./js/main.js?v=2"></script>
+    <script src="./js/rating.js"></script>
     <script src="./js/checkout.js?v=2"></script>
     <script src="./js/checkorder.js"></script>
     <script src="./js/toast-message.js"></script>
