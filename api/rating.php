@@ -182,6 +182,49 @@ if ($method === 'GET' && isset($_GET['check_rating'])) {
     exit;
 }
 
-echo json_encode(["success" => false, "message" => "Invalid request"]);
+// Get all ratings (for admin)
+if ($method === 'GET' && isset($_GET['admin']) && $_GET['admin'] === 'all') {
+    $sql = "SELECT r.*, p.title as product_title, u.fullname, u.email 
+            FROM ratings r
+            LEFT JOIN products p ON r.product_id = p.id
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.created_at DESC";
+    
+    $result = $conn->query($sql);
+    
+    $ratings = [];
+    while ($row = $result->fetch_assoc()) {
+        $ratings[] = $row;
+    }
+    
+    echo json_encode(["success" => true, "ratings" => $ratings]);
+    $conn->close();
+    exit;
+}
+
+// Delete a rating (for admin)
+if ($method === 'DELETE') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $rating_id = $data['id'] ?? 0;
+    
+    if ($rating_id == 0) {
+        echo json_encode(["success" => false, "message" => "Thiếu ID đánh giá"]);
+        exit;
+    }
+    
+    $deleteSql = "DELETE FROM ratings WHERE id = ?";
+    $deleteStmt = $conn->prepare($deleteSql);
+    $deleteStmt->bind_param("i", $rating_id);
+    
+    if ($deleteStmt->execute()) {
+        echo json_encode(["success" => true, "message" => "Xóa đánh giá thành công!"]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Lỗi khi xóa đánh giá"]);
+    }
+    $deleteStmt->close();
+    $conn->close();
+    exit;
+}
+
 $conn->close();
 ?>

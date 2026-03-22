@@ -36,6 +36,11 @@ for(let i = 0; i < sidebars.length; i++) {
         document.querySelector(".section.active").classList.remove("active");
         sidebars[i].classList.add("active");
         sections[i].classList.add("active");
+        
+        // Load ratings when clicking on ratings tab (5th tab = index 5)
+        if (i === 5) {
+            loadRatings();
+        }
     };
 }
 
@@ -1151,3 +1156,68 @@ document.getElementById("logout-acc").addEventListener('click', (e) => {
     localStorage.removeItem("currentuser");
     window.location.href = "./index.php";
 })
+
+// ===== QUẢN LÝ ĐÁNH GIÁ =====
+
+// Load ratings for admin
+function loadRatings() {
+    fetch('api/rating.php?admin=all')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayRatings(data.ratings);
+            }
+        })
+        .catch(error => console.error('Error loading ratings:', error));
+}
+
+// Display ratings in table
+function displayRatings(ratings) {
+    let html = '';
+    ratings.forEach((rating, index) => {
+        const date = new Date(rating.created_at).toLocaleDateString('vi-VN');
+        const stars = '★'.repeat(rating.rating) + '☆'.repeat(5 - rating.rating);
+        const productTitle = rating.product_title || 'Sản phẩm #' + rating.product_id;
+        const userName = rating.fullname || rating.email || 'Ẩn danh';
+        
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${productTitle}</td>
+                <td>${userName}</td>
+                <td style="color:#f39c12;">${stars}</td>
+                <td>${rating.comment || '-'}</td>
+                <td>${date}</td>
+                <td>
+                    <button onclick="deleteRating(${rating.id})" style="background:#e74c3c;color:#fff;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i> Xóa
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    document.getElementById('showRatings').innerHTML = html;
+}
+
+// Delete a rating
+function deleteRating(ratingId) {
+    if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+    
+    fetch('api/rating.php', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: ratingId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            toast({title: 'Success', message: data.message, type: 'success', duration: 3000});
+            loadRatings();
+        } else {
+            toast({title: 'Error', message: data.message, type: 'error', duration: 3000});
+        }
+    })
+    .catch(error => {
+        toast({title: 'Error', message: 'Lỗi khi xóa', type: 'error', duration: 3000});
+    });
+}

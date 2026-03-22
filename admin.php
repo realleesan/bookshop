@@ -60,6 +60,12 @@
                             <div class="hidden-sidebar">Thống kê</div>
                         </a>
                     </li>
+                    <li class="sidebar-list-item tab-content">
+                        <a href="#" class="sidebar-link">
+                            <div class="sidebar-icon"><i class="fa-light fa-star"></i></div>
+                            <div class="hidden-sidebar">Đánh giá</div>
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="bottom-sidebar">
@@ -325,6 +331,31 @@
                             </tr>
                         </thead>
                         <tbody id="showTk">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Rating  -->
+            <div class="section">
+                <div class="admin-control">
+                    <div class="admin-control-left">
+                        <h2 class="page-title">Quản lý đánh giá</h2>
+                    </div>
+                </div>
+                <div class="table">
+                    <table width="100%">
+                        <thead>
+                            <tr>
+                                <td>STT</td>
+                                <td>Sản phẩm</td>
+                                <td>Người đánh giá</td>
+                                <td>Đánh giá</td>
+                                <td>Bình luận</td>
+                                <td>Ngày đánh giá</td>
+                                <td>Hành động</td>
+                            </tr>
+                        </thead>
+                        <tbody id="showRatings">
                         </tbody>
                     </table>
                 </div>
