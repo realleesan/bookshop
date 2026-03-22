@@ -9,9 +9,14 @@ let modalContainer = document.querySelectorAll('.modal');
 let modalBox = document.querySelectorAll('.mdl-cnt');
 let formLogSign = document.querySelector('.forms');
 
-// Click vùng ngoài sẽ tắt Popup
+// Click vùng ngoài sẽ tắt Popup - Chỉ đóng khi click vào nền modal, không đóng khi click vào nội dung bên trong
 modalContainer.forEach(item => {
-    item.addEventListener('click', closeModal);
+    item.addEventListener('click', function(event) {
+        // Chỉ đóng modal khi click trực tiếp vào phần tử modal (nền), không phải các phần tử con
+        if (event.target === item) {
+            closeModal();
+        }
+    });
 });
 
 modalBox.forEach(item => {

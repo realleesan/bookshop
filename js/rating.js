@@ -4,6 +4,12 @@ let currentRating = 0;
 
 // Open rating modal
 function openRatingModal(productId, orderId, productTitle, productImg) {
+    // Close order detail modal first before opening rating modal
+    const orderDetailModal = document.querySelector('.modal.detail-order');
+    if (orderDetailModal) {
+        orderDetailModal.classList.remove('open');
+    }
+    
     const modal = document.querySelector('.rating-modal');
     document.getElementById('rating-product-id').value = productId;
     document.getElementById('rating-order-id').value = orderId;
