@@ -28,9 +28,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Get product ratings (for displaying on product detail)
 if ($method === 'GET' && isset($_GET['product_id'])) {
-    $product_id = $_GET['product_id'];
+    $product_id = intval($_GET['product_id']);
     
-    $sql = "SELECT r.*, u.username, u.email FROM ratings r 
+    $sql = "SELECT r.*, u.fullname, u.email FROM ratings r 
             LEFT JOIN users u ON r.user_id = u.id 
             WHERE r.product_id = ? 
             ORDER BY r.created_at DESC";
@@ -76,8 +76,39 @@ if ($method === 'POST') {
     $rating = $data['rating'] ?? 0;
     $comment = $data['comment'] ?? '';
     
-    if ($product_id == 0 || $user_id == 0 || $order_id == 0 || $rating == 0) {
-        echo json_encode(["success" => false, "message" => "Thiếu thông tin cần thiết"]);
+    // Handle string values - extract numeric part from "DH1" format and validate
+    $product_id = is_numeric($product_id) ? intval($product_id) : 0;
+    $order_id = is_numeric($order_id) ? intval($order_id) : 0;
+    $rating = is_numeric($rating) ? intval($rating) : 0;
+    
+    // For user_id, it could be either a numeric ID or a phone string
+    // If it's a phone string, look up the user in the database
+    if (!is_numeric($user_id) && !empty($user_id)) {
+        // This is a phone number, look up the user
+        $phoneLookupSql = "SELECT id FROM users WHERE phone = ?";
+        $phoneLookupStmt = $conn->prepare($phoneLookupSql);
+        $phoneLookupStmt->bind_param("s", $user_id);
+        $phoneLookupStmt->execute();
+        $phoneLookupResult = $phoneLookupStmt->get_result();
+        if ($phoneLookupResult->num_rows > 0) {
+            $phoneUser = $phoneLookupResult->fetch_assoc();
+            $user_id = $phoneUser['id'];
+        } else {
+            $user_id = 0;
+        }
+        $phoneLookupStmt->close();
+    } else {
+        $user_id = intval($user_id);
+    }
+    
+    $errors = [];
+    if ($product_id == 0) $errors[] = "product_id";
+    if ($user_id == 0 || $user_id === '') $errors[] = "user_id";
+    if ($order_id == 0) $errors[] = "order_id";
+    if ($rating == 0) $errors[] = "rating";
+    
+    if (count($errors) > 0) {
+        echo json_encode(["success" => false, "message" => "Thiếu thông tin: " . implode(", ", $errors)]);
         exit;
     }
     
@@ -139,7 +170,7 @@ if ($method === 'GET' && isset($_GET['check_rating'])) {
         exit;
     }
     
-    $sql = "SELECT * FROM ratings WHERE order_id = ? AND product_id = ?";
+    $sql = "SELECT rating, comment, created_at FROM ratings WHERE order_id = ? AND product_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $order_id, $product_id);
     $stmt->execute();

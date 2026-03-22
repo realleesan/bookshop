@@ -1436,7 +1436,7 @@ function getOrderDetails(madon) {
 function detailOrder(id) {
     document.querySelector(".modal.detail-order").classList.add("open");
     let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-    let products = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("products")) : [];
+    let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
     // Lấy hóa đơn 
     let order = orders.find((item) => item.id == id);
     // Lấy chi tiết hóa đơn

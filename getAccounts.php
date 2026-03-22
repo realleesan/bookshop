@@ -30,7 +30,7 @@ if ($conn->connect_error) {
 }
 
 // Truy vấn để lấy thông tin người dùng và giỏ hàng của họ
-$sql = "SELECT u.fullname, u.phone, u.password, u.address, u.email, u.status, u.join_date, u.userType, c.product_id, c.quantity, c.note
+$sql = "SELECT u.id, u.fullname, u.phone, u.password, u.address, u.email, u.status, u.join_date, u.userType, c.product_id, c.quantity, c.note
         FROM users u
         LEFT JOIN cart c ON u.id = c.user_id";
 $result = $conn->query($sql);
@@ -44,6 +44,7 @@ if ($result->num_rows > 0) {
         // Kiểm tra nếu người dùng đã có trong mảng $accounts
         if (!isset($accounts[$userId])) {
             $accounts[$userId] = array(
+                'id' => (int)$row['id'],
                 'fullname' => $row['fullname'],
                 'phone' => $row['phone'],
                 'password' => $row['password'],

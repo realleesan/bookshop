@@ -93,6 +93,20 @@ function submitRating() {
     const orderId = document.getElementById('rating-order-id').value;
     const comment = document.getElementById('rating-comment').value;
     
+    console.log('Rating submit - productId:', productId, 'orderId:', orderId, 'rating:', currentRating);
+    console.log('Hidden input values - product:', document.getElementById('rating-product-id').value, 'order:', document.getElementById('rating-order-id').value);
+    
+    // Validate productId and orderId
+    if (!productId || productId === '' || productId === 'undefined') {
+        toast({ title: 'Error', message: 'Thiếu thông tin sản phẩm!', type: 'error', duration: 3000 });
+        return;
+    }
+    
+    if (!orderId || orderId === '' || orderId === 'undefined') {
+        toast({ title: 'Error', message: 'Thiếu thông tin đơn hàng!', type: 'error', duration: 3000 });
+        return;
+    }
+    
     if (currentRating === 0) {
         toast({ title: 'Warning', message: 'Vui lòng chọn số sao đánh giá!', type: 'warning', duration: 3000 });
         return;
@@ -100,20 +114,31 @@ function submitRating() {
     
     // Get user from localStorage
     let user = localStorage.getItem('currentuser');
+    console.log('User from localStorage:', user);
+    
     if (!user) {
         toast({ title: 'Warning', message: 'Vui lòng đăng nhập để đánh giá!', type: 'warning', duration: 3000 });
         return;
     }
     
     user = JSON.parse(user);
+    console.log('Parsed user object:', user);
+    
+    // Handle user_id - use id if available, otherwise use phone as fallback
+    const userId = user.id || user.phone;
+    
+    // Handle order_id - extract numeric part from "DH1" format
+    const orderIdNum = orderId.replace('DH', '');
     
     const ratingData = {
         product_id: parseInt(productId),
-        user_id: user.id,
-        order_id: parseInt(orderId),
+        user_id: userId,
+        order_id: orderIdNum,
         rating: currentRating,
         comment: comment
     };
+    
+    console.log('Sending rating data:', ratingData);
     
     fetch('api/rating.php', {
         method: 'POST',
@@ -129,6 +154,10 @@ function submitRating() {
             closeRatingModal();
             // Refresh the order details to update the rating button
             detailOrder(orderId);
+            // Also reload the product reviews if the product detail modal is open
+            if (productId) {
+                loadProductReviews(productId);
+            }
         } else {
             toast({ title: 'Error', message: data.message, type: 'error', duration: 3000 });
         }
@@ -141,9 +170,16 @@ function submitRating() {
 
 // Get ratings for a product
 function getProductRatings(productId, callback) {
+    console.log('Fetching ratings for product_id:', productId);
     fetch('api/rating.php?product_id=' + productId)
-    .then(response => response.json())
-    .then(data => {
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.text();
+    })
+    .then(text => {
+        console.log('Raw response:', text);
+        const data = JSON.parse(text);
+        console.log('Ratings API response:', data);
         if (data.success) {
             callback(data);
         } else {
@@ -192,7 +228,7 @@ function loadProductReviews(productId) {
             reviewsHtml += `
                 <div class="review-item">
                     <div class="review-header">
-                        <span class="reviewer-name">${review.username || 'Ẩn danh'}</span>
+                        <span class="reviewer-name">${review.fullname || 'Ẩn danh'}</span>
                         <span class="review-date">${date}</span>
                     </div>
                     <div class="review-stars">${getStarDisplay(review.rating)}</div>
