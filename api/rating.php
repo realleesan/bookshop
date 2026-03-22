@@ -130,17 +130,11 @@ if ($method === 'POST') {
     $checkResult = $checkStmt->get_result();
     
     if ($checkResult->num_rows > 0) {
-        // Update existing rating
-        $updateSql = "UPDATE ratings SET rating = ?, comment = ? WHERE order_id = ? AND product_id = ?";
-        $updateStmt = $conn->prepare($updateSql);
-        $updateStmt->bind_param("isii", $rating, $comment, $order_id, $product_id);
-        
-        if ($updateStmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Cập nhật đánh giá thành công!"]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Lỗi khi cập nhật đánh giá"]);
-        }
-        $updateStmt->close();
+        // Already rated - don't allow updating
+        echo json_encode(["success" => false, "message" => "Sản phẩm này đã được đánh giá trong đơn hàng này!"]);
+        $checkStmt->close();
+        $conn->close();
+        exit;
     } else {
         // Insert new rating
         $insertSql = "INSERT INTO ratings (product_id, user_id, order_id, rating, comment) VALUES (?, ?, ?, ?, ?)";

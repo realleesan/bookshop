@@ -158,7 +158,7 @@ function submitRating() {
             if (productId) {
                 loadProductReviews(productId);
             }
-        } else {
+        } else if (data.message.includes('đã được đánh giá')) {
             toast({ title: 'Error', message: data.message, type: 'error', duration: 3000 });
         }
     })

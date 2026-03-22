@@ -1451,7 +1451,7 @@ function detailOrder(id) {
                 <div class="order-product-info">
                     <h4>${detaiSP.title}</h4>
                     <p class="order-product-note"><i class="fa-light fa-pen"></i> ${item.note}</p>
-                    <p class="order-product-quantity">SL: ${item.soluong}<p>${order.trangthai == 1 ? `<br><button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${order.id}', '${detaiSP.title}', '${detaiSP.img}')"><i class="fa-regular fa-star"></i> Đánh giá</button>` : ''}
+                    <p class="order-product-quantity">SL: ${item.soluong}<p>${order.trangthai == 1 ? `<br><span class="rating-status" id="rating-status-${item.id}-${order.id}"><i class="fa-regular fa-spinner fa-spin"></i> Kiểm tra...</i></span>` : ''}
                 </div>
             </div>
             <div class="order-product-right">
@@ -1519,6 +1519,36 @@ function detailOrder(id) {
     <div class="modal-detail-bottom-right">
         <button class="modal-detail-btn ${classDetailBtn}" onclick="changeStatus('${order.id}',this)">${textDetailBtn}</button>
     </div>`;
+    
+    // Check if products have been rated
+    checkProductRatings(ctDon, order.id, products);
+}
+
+// Check if products in order have been rated
+function checkProductRatings(orderDetails, orderId, products) {
+    orderDetails.forEach(item => {
+        const statusElement = document.getElementById(`rating-status-${item.id}-${orderId}`);
+        if (!statusElement) return;
+        
+        const orderIdNum = orderId.replace('DH', '');
+        const product = products.find(p => p.id == item.id);
+        const productTitle = product ? product.title : '';
+        const productImg = product ? product.img : '';
+        
+        fetch(`api/rating.php?check_rating=1&order_id=${orderIdNum}&product_id=${item.id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.has_rated) {
+                    statusElement.innerHTML = `<button class="btn-rated-product" disabled style="background:#28a745;color:#fff;padding:5px 10px;border:none;border-radius:4px;cursor:not-allowed;"><i class="fa-solid fa-check"></i> Đã đánh giá</button>`;
+                } else {
+                    statusElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '${productTitle}', '${productImg}')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error checking rating:', error);
+                statusElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '', '')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
+            });
+    });
 }
 
 let currentSlide = 0; // Slide hiện tại bắt đầu từ 0
