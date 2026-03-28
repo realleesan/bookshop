@@ -935,7 +935,7 @@ function showUserArr(arr) {
             <td>${tinhtrang}</td>
             <td class="control control-table">
             <button class="btn-edit" id="edit-account" onclick='editAccount(${account.phone})' ><i class="fa-light fa-pen-to-square"></i></button>
-            <button class="btn-delete" id="delete-account" onclick="deleteAccount(${account.phone})"><i class="fa-regular fa-trash"></i></button>
+            <button class="btn-delete" id="delete-account" onclick="deleteAccount('${account.phone}')"><i class="fa-regular fa-trash"></i></button>
             </td>
         </tr>`
         })
@@ -987,32 +987,70 @@ function cancelSearchUser() {
     document.getElementById("time-end-user").value = "";
 }
 
-window.onload = showUser();
+// Hàm tải dữ liệu users từ database mỗi khi truy cập
+function loadUsersFromDB() {
+    fetch('getAccounts.php')
+        .then(response => response.json())
+        .then(data => {
+            // Ép kiểu phone sang string để tránh vấn đề octal
+            const accounts = data.map(account => ({
+                fullname: account.fullname,
+                phone: String(account.phone),
+                password: account.password,
+                address: account.address,
+                email: account.email,
+                status: account.status,
+                join: new Date(account.join_date),
+                cart: account.cart || [],
+                userType: account.userType
+            }));
+            
+            // Lưu vào localStorage
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+            showUser();
+        });
+}
+
+window.onload = function() {
+    // Luôn tải dữ liệu mới từ database khi truy cập
+    loadUsersFromDB();
+};
 
 function deleteAccount(phone) {
+    // Ép phone sang string để tránh vấn đề parse (ví dụ: "095421" thành 0)
+    let phoneStr = String(phone);
     let accounts = JSON.parse(localStorage.getItem('accounts'));
-    let index = accounts.findIndex(item => item.phone == phone);
+    let index = accounts.findIndex(item => String(item.phone) === phoneStr);
+    
+    // Debug: log để tìm vấn đề
+    console.log('deleteAccount called with phone:', phone, '| index found:', index);
+    console.log('accounts sample:', accounts.slice(0, 3));
+
+    if (index === -1) {
+        console.error('Cannot find account with phone:', phone);
+        toast({ title: 'Lỗi', message: 'Không tìm thấy tài khoản!', type: 'error', duration: 3000 });
+        return;
+    }
 
     if (confirm("Bạn có chắc muốn xóa?")) {
-        // Xóa tài khoản trong localStorage
-        accounts.splice(index, 1);
-        localStorage.setItem("accounts", JSON.stringify(accounts));
-        showUser();
-
         // Gửi yêu cầu AJAX tới PHP để xóa tài khoản trong database
         fetch('delete_account.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ phone: phone })
+            body: JSON.stringify({ phone: String(phone) })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                toast({ title: 'Success', message: 'Xóa tài khoản thành công!', type: 'success', duration: 3000 });
+                // Chỉ xóa khỏi localStorage KHI PHP xóa thành công
+                accounts.splice(index, 1);
+                localStorage.setItem("accounts", JSON.stringify(accounts));
+                showUser();
+                toast({ title: 'Success', message: data.message || 'Xóa tài khoản thành công!', type: 'success', duration: 3000 });
             } else {
-                toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi khi xóa tài khoản!', type: 'error', duration: 3000 });
+                toast({ title: 'Thất bại', message: data.message || 'Đã xảy ra lỗi khi xóa tài khoản!', type: 'error', duration: 3000 });
             }
         })
         .catch(error => {

@@ -139,7 +139,22 @@ function refreshAccounts() {
 
             // Cập nhật lại localStorage với dữ liệu mới
             localStorage.setItem('accounts', JSON.stringify(data));
+            
+            // Gọi showUser nếu đang ở trang admin
+            if (typeof showUser === 'function') {
+                showUser();
+                showToast('Đã tải lại dữ liệu từ server!', 'success');
+            }
         });
+}
+
+// Hàm hiển thị toast notification (đã có sẵn trong các file khác)
+function showToast(message, type = 'success') {
+    if (typeof toast === 'function') {
+        toast({ title: type === 'success' ? 'Thành công' : 'Lỗi', message: message, type: type, duration: 2000 });
+    } else {
+        alert(message);
+    }
 }
 
 // Khởi tạo danh sách chi tiết đơn hàng

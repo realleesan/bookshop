@@ -31,27 +31,29 @@ if ($conn->connect_error) {
 }
 
 // Đọc dữ liệu từ yêu cầu POST
-$data = json_decode(file_get_contents('php://input'), true);
-$phone = $data['phone'];
+$rawInput = file_get_contents('php://input');
+$data = json_decode($rawInput, true);
+$phone = $data['phone'] ?? '';
+
+// Debug: ghi log giá trị phone
+$debugMsg = date('Y-m-d H:i:s') . " | raw: '" . $rawInput . "' | phone: '" . $phone . "' | len: " . strlen($phone) . "\n";
+file_put_contents('test_delete.log', $debugMsg, FILE_APPEND);
 
 // Xóa tài khoản khỏi cơ sở dữ liệu
-// Sử dụng CAST để so sánh đúng với cột kiểu TEXT
-$sql = "DELETE FROM users WHERE CAST(phone AS CHAR) = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $phone);
-
-$stmt->execute();
+// Sử dụng TRIM để loại bỏ khoảng trắng thừa và so sánh chính xác với cột kiểu TEXT
+$phoneEscaped = $conn->real_escape_string($phone);
+$sql = "DELETE FROM users WHERE TRIM(phone) = '$phoneEscaped'";
+$result = $conn->query($sql);
 
 // Kiểm tra số bản ghi bị ảnh hưởng
-$affectedRows = $stmt->affected_rows;
+$affectedRows = $conn->affected_rows;
 
-if ($affectedRows > 0) {
+if ($result && $affectedRows > 0) {
     echo json_encode(["success" => true, "message" => "Xóa tài khoản thành công!"]);
 } else {
     // Không tìm thấy tài khoản để xóa (user không tồn tại hoặc phone không khớp)
     echo json_encode(["success" => false, "message" => "Không tìm thấy tài khoản để xóa!"]);
 }
 
-$stmt->close();
 $conn->close();
 ?>
