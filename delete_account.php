@@ -35,14 +35,21 @@ $data = json_decode(file_get_contents('php://input'), true);
 $phone = $data['phone'];
 
 // Xóa tài khoản khỏi cơ sở dữ liệu
-$sql = "DELETE FROM users WHERE phone = ?";
+// Sử dụng CAST để so sánh đúng với cột kiểu TEXT
+$sql = "DELETE FROM users WHERE CAST(phone AS CHAR) = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $phone);
 
-if ($stmt->execute()) {
+$stmt->execute();
+
+// Kiểm tra số bản ghi bị ảnh hưởng
+$affectedRows = $stmt->affected_rows;
+
+if ($affectedRows > 0) {
     echo json_encode(["success" => true, "message" => "Xóa tài khoản thành công!"]);
 } else {
-    echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi xóa tài khoản!"]);
+    // Không tìm thấy tài khoản để xóa (user không tồn tại hoặc phone không khớp)
+    echo json_encode(["success" => false, "message" => "Không tìm thấy tài khoản để xóa!"]);
 }
 
 $stmt->close();
