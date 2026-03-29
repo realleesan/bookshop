@@ -37,6 +37,10 @@ for(let i = 0; i < sidebars.length; i++) {
         sidebars[i].classList.add("active");
         sections[i].classList.add("active");
         
+        // Load users when clicking on users tab (2nd tab = index 2)
+        if (i === 2) {
+            loadUsersFromDB();
+        }
         // Load orders when clicking on orders tab (3rd tab = index 3)
         if (i === 3) {
             loadOrdersFromDB();
@@ -505,7 +509,7 @@ function uploadImage(el) {
 }
 
 // Đổi trạng thái đơn hàng
-function changeStatus(id, el) {
+function changeStatus(id, newStatus) {
     let orders = JSON.parse(localStorage.getItem("order"));
     let order = orders.find((item) => item.id == id);
 
@@ -517,14 +521,14 @@ function changeStatus(id, el) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ id: id, trangthai: 1 })
+        body: JSON.stringify({ id: id, trangthai: parseInt(newStatus) })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             // Cập nhật trạng thái đơn hàng trong localStorage
-    order.trangthai = 1;
-    el.classList.remove("btn-chuaxuly");
+    order.trangthai = parseInt(newStatus);
+    // Removed old button code
     el.classList.add("btn-daxuly");
     el.innerHTML = "Đã xử lý";
     localStorage.setItem("order", JSON.stringify(orders));
@@ -553,6 +557,28 @@ function formatDate(date) {
     return dd + "/" + mm + "/" + yyyy;
 }
 
+// Hàm lấy tên trạng thái
+function getStatusName(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'Chờ xử lý';
+        case 1: return 'Đang xử lý';
+        case 2: return 'Đã xử lý';
+        case 3: return 'Đã hủy';
+        default: return 'Chờ xử lý';
+    }
+}
+
+// Hàm lấy class CSS cho trạng thái
+function getStatusClass(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'status-pending';    // Chờ xử lý - màu vàng
+        case 1: return 'status-processing';  // Đang xử lý - màu xanh dương
+        case 2: return 'status-complete';   // Đã xử lý - màu xanh lá
+        case 3: return 'status-cancelled';  // Đã hủy - màu đỏ
+        default: return 'status-pending';
+    }
+}
+
 // Show order
 function showOrder(arr) {
     let orderHtml = "";
@@ -560,7 +586,8 @@ function showOrder(arr) {
         orderHtml = `<td colspan="7">Không có dữ liệu</td>`
     } else {
         arr.forEach((item) => {
-            let status = item.trangthai == 0 ? `<span class="status-no-complete">Chưa xử lý</span>` : `<span class="status-complete">Đã xử lý</span>`;
+            let statusClass = getStatusClass(item.trangthai);
+            let statusName = getStatusName(item.trangthai);
             let date = formatDate(item.thoigiandat);
             orderHtml += `
             <tr>
@@ -568,7 +595,9 @@ function showOrder(arr) {
             <td>${item.khachhang}</td>
             <td>${date}</td>
             <td>${vnd(item.tongtien)}</td>                               
-            <td>${status}</td>
+            <td>
+                <span class="${statusClass}">${statusName}</span>
+            </td>
             <td class="control">
             <button class="btn-detail" onclick="detailOrder('${item.id}')"><i class="fa-regular fa-eye"></i> Chi tiết</button>
             <button class="btn-delete" onclick="deleteOrder('${item.id}')"><i class="fa-regular fa-trash"></i> Xóa</button>
@@ -625,23 +654,36 @@ function deleteOrder(orderId) {
 
 // Hàm tải đơn hàng từ database mỗi khi truy cập
 function loadOrdersFromDB() {
-    console.log('Đang tải đơn hàng từ database...');
-    Promise.all([
-        fetch('get_orders.php').then(r => r.json()),
-        fetch('get_order_details.php').then(r => r.json())
-    ])
-    .then(([orders, orderDetails]) => {
-        console.log('Đơn hàng tải thành công:', orders.length, 'đơn');
+    console.log('=== DEBUG loadOrdersFromDB ===');
+    
+    // Load orders
+    fetch('get_orders.php')
+    .then(r => r.json())
+    .then(orders => {
+        console.log('Orders raw:', orders);
         localStorage.setItem('order', JSON.stringify(orders));
+        
+        // Load order details
+        return fetch('get_order_details.php');
+    })
+    .then(r => r.json())
+    .then(orderDetails => {
+        console.log('OrderDetails raw:', orderDetails);
         localStorage.setItem('orderDetails', JSON.stringify(orderDetails));
+        
+        // Load products
+        return fetch('get_products.php');
+    })
+    .then(r => r.json())
+    .then(products => {
+        console.log('Products loaded:', products.length);
+        localStorage.setItem('products', JSON.stringify(products));
+        
+        let orders = JSON.parse(localStorage.getItem('order') || '[]');
         showOrder(orders);
     })
     .catch(err => {
         console.error('Lỗi tải đơn hàng:', err);
-        // Fallback: dùng localStorage nếu API fail
-        let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-        console.log('Dùng fallback với', orders.length, 'đơn');
-        showOrder(orders);
     });
 }
 
@@ -664,27 +706,47 @@ function getOrderDetails(madon) {
 function detailOrder(id) {
     document.querySelector(".modal.detail-order").classList.add("open");
     let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-    let products = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("products")) : [];
+    let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
+    
+    console.log('=== DEBUG detailOrder ===');
+    console.log('Orders count:', orders.length);
+    console.log('Products count:', products.length);
+    console.log('Looking for order id:', id);
+    
     // Lấy hóa đơn 
     let order = orders.find((item) => item.id == id);
+    
+    // Kiểm tra nếu không tìm thấy đơn hàng
+    if (!order) {
+        console.error('Không tìm thấy đơn hàng với id:', id);
+        toast({ title: 'Lỗi', message: 'Không tìm thấy thông tin đơn hàng!', type: 'error', duration: 3000 });
+        return;
+    }
+    
     // Lấy chi tiết hóa đơn
     let ctDon = getOrderDetails(id);
     let spHtml = `<div class="modal-detail-left"><div class="order-item-group">`;
 
     ctDon.forEach((item) => {
-        let detaiSP = products.find(product => product.id == item.id);
+        // Tìm sản phẩm - so sánh cả string và number
+        let detaiSP = products.find(product => String(product.id) === String(item.id) || product.id == item.id);
+        
+        // Sử dụng thông tin mặc định nếu sản phẩm không tồn tại
+        let img = detaiSP ? detaiSP.img : './assets/img/blank-image.png';
+        let title = detaiSP ? detaiSP.title : 'Sản phẩm #' + item.id;
+        
         spHtml += `<div class="order-product">
             <div class="order-product-left">
-                <img src="${detaiSP.img}" alt="">
+                <img src="${img}" alt="">
                 <div class="order-product-info">
-                    <h4>${detaiSP.title}</h4>
-                    <p class="order-product-note"><i class="fa-light fa-pen"></i> ${item.note}</p>
-                    <p class="order-product-quantity">SL: ${item.soluong}<p>
+                    <h4>${title}</h4>
+                    <p class="order-product-note"><i class="fa-light fa-pen"></i> ${item.note || ''}</p>
+                    <p class="order-product-quantity">SL: ${item.soluong || 0}<p>
                 </div>
             </div>
             <div class="order-product-right">
                 <div class="order-product-price">
-                    <span class="order-product-current-price">${vnd(item.price)}</span>
+                    <span class="order-product-current-price">${vnd(item.price || 0)}</span>
                 </div>                         
             </div>
         </div>`;
@@ -734,8 +796,8 @@ function detailOrder(id) {
     </div>`;
     document.querySelector(".modal-detail-order").innerHTML = spHtml;
 
-    let classDetailBtn = order.trangthai == 0 ? "btn-chuaxuly" : "btn-daxuly";
-    let textDetailBtn = order.trangthai == 0 ? "Chưa xử lý" : "Đã xử lý";
+    // Hiển thị dropdown chọn trạng thái trong modal
+    let currentStatus = parseInt(order.trangthai);
     document.querySelector(
         ".modal-detail-bottom"
     ).innerHTML = `<div class="modal-detail-bottom-left">
@@ -745,7 +807,12 @@ function detailOrder(id) {
         </div>
     </div>
     <div class="modal-detail-bottom-right">
-        <button class="modal-detail-btn ${classDetailBtn}" onclick="changeStatus('${order.id}',this)">${textDetailBtn}</button>
+        <select class="status-select-modal" onchange="changeStatus('${order.id}', this.value)">
+            <option value="0" ${currentStatus == 0 ? 'selected' : ''}>Chờ xử lý</option>
+            <option value="1" ${currentStatus == 1 ? 'selected' : ''}>Đang xử lý</option>
+            <option value="2" ${currentStatus == 2 ? 'selected' : ''}>Đã xử lý</option>
+            <option value="3" ${currentStatus == 3 ? 'selected' : ''}>Đã hủy</option>
+        </select>
     </div>`;
 }
 
@@ -803,15 +870,20 @@ function createObj() {
     orderDetails.forEach(item => {
         // Lấy thông tin sản phẩm
         let prod = products.find(product => {return product.id == item.id;});
+        // Kiểm tra nếu sản phẩm không tồn tại
+        if (!prod) {
+            return; // Bỏ qua nếu sản phẩm không tồn tại
+        }
         let obj = new Object();
         obj.id = item.id;
         obj.madon = item.madon;
         obj.price = item.price;
         obj.quantity = item.soluong;
-        obj.category = prod.category;
-        obj.title = prod.title;
-        obj.img = prod.img;
-        obj.time = (orders.find(order => order.id == item.madon)).thoigiandat;
+        obj.category = prod.category || '';
+        obj.title = prod.title || '';
+        obj.img = prod.img || '';
+        let order = orders.find(order => order.id == item.madon);
+        obj.time = order ? order.thoigiandat : '';
         result.push(obj);
     });
     return result;
@@ -928,7 +1000,7 @@ function detailOrderProduct(arr,id) {
             orderHtml += `<tr>
             <td>${item.madon}</td>
             <td>${item.quantity}</td>
-            <td>${vnd(item.price)}</td>
+            <td>${vnd(item.price || 0)}</td>
             <td>${formatDate(item.time)}</td>
             </tr>      
             `;
@@ -941,6 +1013,11 @@ function detailOrderProduct(arr,id) {
 // User
 let addAccount = document.getElementById('signup-button');
 let updateAccount = document.getElementById("btn-update-account")
+
+// THÊM MỚI: Event listener cho nút cập nhật tài khoản
+if (updateAccount) {
+    updateAccount.addEventListener("click", updateAccountFunc);
+}
 
 document.querySelector(".modal.signup .modal-close").addEventListener("click",() => {
     signUpFormReset();
@@ -982,7 +1059,7 @@ function showUserArr(arr) {
             <td>${tinhtrang}</td>
             <td>${vaitro}</td>
             <td class="control control-table">
-            <button class="btn-edit" id="edit-account" onclick='editAccount(${account.phone})' ><i class="fa-light fa-pen-to-square"></i></button>
+            <button class="btn-edit" id="edit-account" onclick='editAccount("${account.phone}")' ><i class="fa-light fa-pen-to-square"></i></button>
             <button class="btn-delete" id="delete-account" onclick="deleteAccount('${account.phone}')"><i class="fa-regular fa-trash"></i></button>
             </td>
         </tr>`
@@ -1112,6 +1189,9 @@ function deleteAccount(phone) {
 
 let indexFlag;
 function editAccount(phone) {
+    // Debug: log giá trị phone
+    console.log('editAccount called with phone:', phone, 'type:', typeof phone);
+    
     document.querySelector(".signup").classList.add("open");
     document.querySelectorAll(".add-account-e").forEach(item => {
         item.style.display = "none"
@@ -1120,33 +1200,67 @@ function editAccount(phone) {
         item.style.display = "block"
     })
     let accounts = JSON.parse(localStorage.getItem("accounts"));
+    
+    console.log('Accounts sample:', accounts.slice(0, 2));
+    
+    // Tìm account - so sánh cả string và number
     let index = accounts.findIndex(item => {
-        return item.phone == phone
-    })
-    indexFlag = index;
-    document.getElementById("fullname").value = accounts[index].fullname;
-    document.getElementById("phone").value = accounts[index].phone;
-    document.getElementById("password").value = accounts[index].password;
-    document.getElementById("user-status").checked = accounts[index].status == 1 ? true : false;
+        return String(item.phone) === String(phone) || item.phone == phone;
+    });
+    
+    console.log('Found index:', index);
+    console.log('Account data:', accounts[index]);
+    
+    if (index === -1) {
+        toast({ title: 'Lỗi', message: 'Không tìm thấy tài khoản!', type: 'error', duration: 3000 });
+        return;
+    }
+    
+    // Lưu phone để cập nhật (không dùng indexFlag vì có thể bị hoisting issue)
+    let account = accounts[index];
+    window.selectedAccountPhone = account.phone;
+    
+    console.log('Setting values:', {
+        fullname: account.fullname,
+        phone: account.phone,
+        password: account.password,
+        status: account.status
+    });
+    
+    document.getElementById("fullname").value = account.fullname || '';
+    document.getElementById("phone").value = String(account.phone) || '';
+    document.getElementById("password").value = account.password || '';
+    // Sửa logic status: status = 1 hoặc "1" hoặc true = checked
+    const isActive = account.status == 1 || account.status === "1" || account.status === true;
+    document.getElementById("user-status").checked = isActive;
+    
+    console.log('Fields set successfully');
 }
 
 // Hàm cập nhật thông tin tài khoản
-updateAccount.addEventListener("click", (e) => {
-    e.preventDefault();
+function updateAccountFunc(e) {
+    if (e) e.preventDefault();
     let accounts = JSON.parse(localStorage.getItem("accounts"));
     let fullname = document.getElementById("fullname").value;
     let phone = document.getElementById("phone").value;
     let password = document.getElementById("password").value;
+    let status = document.getElementById("user-status").checked;
     
+    // Validate
     if(fullname == "" || phone == "" || password == "") {
         toast({ title: 'Chú ý', message: 'Vui lòng nhập đầy đủ thông tin!', type: 'warning', duration: 3000 });
-    } else {
-        // Cập nhật thông tin tài khoản trong localStorage
-        accounts[indexFlag].fullname = fullname;
-        accounts[indexFlag].phone = phone;
-        accounts[indexFlag].password = password;
-        accounts[indexFlag].status = document.getElementById("user-status").checked ? true : false;
+        return;
+    }
+    
+    // Tìm và cập nhật trong localStorage bằng phone
+    let index = accounts.findIndex(item => String(item.phone) === String(window.selectedAccountPhone));
+    if (index !== -1) {
+        accounts[index].fullname = fullname;
+        accounts[index].phone = phone;
+        accounts[index].password = password;
+        accounts[index].status = status;
         localStorage.setItem("accounts", JSON.stringify(accounts));
+    }
         
         // Gửi yêu cầu AJAX tới PHP để cập nhật database
         fetch('update_account.php', {
@@ -1158,7 +1272,7 @@ updateAccount.addEventListener("click", (e) => {
                 fullname: fullname,
                 phone: phone,
                 password: password,
-                status: accounts[indexFlag].status
+                status: status
             })
         })
         .then(response => response.json())
@@ -1173,11 +1287,9 @@ updateAccount.addEventListener("click", (e) => {
             }
         })
         .catch(error => {
-            //console.error('Error:', error);
             toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi, vui lòng thử lại sau!', type: 'error', duration: 3000 });
         });
-    }
-});
+}
 
 // Hàm thêm tài khoản mới
 addAccount.addEventListener("click", (e) => {
@@ -1308,3 +1420,9 @@ function deleteRating(ratingId) {
         toast({title: 'Error', message: 'Lỗi khi xóa', type: 'error', duration: 3000});
     });
 }
+
+
+
+
+
+

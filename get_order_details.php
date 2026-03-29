@@ -33,15 +33,18 @@ if ($conn->connect_error) {
 // Thiết lập UTF-8 cho kết nối
 $conn->set_charset("utf8");
 
-// Lấy dữ liệu từ bảng orderDetails
-$sql = "SELECT * FROM orderDetails";
+// Lấy dữ liệu từ bảng orderdetails
+$sql = "SELECT * FROM orderdetails";
 $result = $conn->query($sql);
 
 $orderDetails = [];
 
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     // Chuyển đổi từng hàng kết quả thành mảng liên kết
     while($row = $result->fetch_assoc()) {
+        // Rename columns to match JavaScript expectations
+        $row['id'] = $row['product_id'];  // product_id -> id
+        $row['price'] = $row['product_price'];  // product_price -> price
         $orderDetails[] = $row;
     }
 }

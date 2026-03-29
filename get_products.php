@@ -38,8 +38,8 @@ $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `search_count` INT(1
 $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `like_count` INT(11) DEFAULT 0");
 $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `sold_count` INT(11) DEFAULT 0");
 
-// Truy vấn dữ liệu từ bảng sản phẩm (chỉ lấy sản phẩm có status = 1 - chưa bị xóa)
-$sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products WHERE status = 1";
+// Truy vấn dữ liệu từ bảng sản phẩm (lấy tất cả sản phẩm bao gồm cả đã xóa)
+$sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products";
 $result = $conn->query($sql);
 
 $products = array();

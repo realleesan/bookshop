@@ -217,8 +217,10 @@
                     <div class="admin-control-left">
                         <select name="tinh-trang" id="tinh-trang" onchange="findOrder()">
                             <option value="2">Tất cả</option>
-                            <option value="1">Đã xử lý</option>
-                            <option value="0">Chưa xử lý</option>
+                            <option value="0">Chờ xử lý</option>
+                            <option value="1">Đang xử lý</option>
+                            <option value="2">Đã xử lý</option>
+                            <option value="3">Đã hủy</option>
                         </select>
                     </div>
                     <div class="admin-control-center">

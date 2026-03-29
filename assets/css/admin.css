@@ -1238,6 +1238,93 @@ label a {
     display: inline-block;
 }
 
+/* Status Select Dropdown */
+.status-select {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 130px;
+}
+
+.status-select option[value="0"] {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+.status-select option[value="1"] {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.status-select option[value="2"] {
+    background-color: #27ae60;
+    color: #fff;
+}
+
+.status-select option[value="3"] {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+/* Status colors */
+.status-pending {
+    background-color: #f39c12;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+.status-processing {
+    background-color: #3498db;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+.status-cancelled {
+    background-color: #e74c3c;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+/* Modal Status Select */
+.status-select-modal {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.status-select-modal option[value="0"] {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+.status-select-modal option[value="1"] {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.status-select-modal option[value="2"] {
+    background-color: #27ae60;
+    color: #fff;
+}
+
+.status-select-modal option[value="3"] {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
 .btn-chuaxuly {
     background-color: var(--red);
 }

@@ -37,17 +37,22 @@ $phone = $data['phone'];
 $password = $data['password'];
 $status = $data['status'];
 
-// Cập nhật thông tin tài khoản trong cơ sở dữ liệu
-$sql = "UPDATE users SET fullname = ?, password = ?, status = ? WHERE phone = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ssis", $fullname, $password, $status, $phone);
+// Chuyển đổi status sang số nguyên
+$statusInt = $status ? 1 : 0;
 
-if ($stmt->execute()) {
+// Cập nhật thông tin tài khoản trong cơ sở dữ liệu
+// Sử dụng real_escape_string thay vì prepared statements để tránh vấn đề với phone number
+$fullnameEscaped = $conn->real_escape_string($fullname);
+$phoneEscaped = $conn->real_escape_string($phone);
+$passwordEscaped = $conn->real_escape_string($password);
+
+$sql = "UPDATE users SET fullname = '$fullnameEscaped', password = '$passwordEscaped', status = $statusInt WHERE phone = '$phoneEscaped'";
+
+if ($conn->query($sql)) {
     echo json_encode(["success" => true, "message" => "Cập nhật tài khoản thành công!"]);
 } else {
     echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi cập nhật tài khoản!"]);
 }
 
-$stmt->close();
 $conn->close();
 ?>

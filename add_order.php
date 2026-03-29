@@ -46,15 +46,15 @@ $sqlOrder = "INSERT INTO `order` (id, khachhang, hinhthucgiao, ngaygiaohang, tho
 $stmtOrder = $conn->prepare($sqlOrder);
 $stmtOrder->bind_param("sssssssssssiii", $order['id'], $order['khachhang'], $order['hinhthucgiao'], $order['ngaygiaohang'], $order['thoigiangiao'], $order['ghichu'], $order['tenguoinhan'], $order['sdtnhan'], $order['diachinhan'], $order['thoigiandat'], $order['tongtien'], $phiVanChuyen, $giamGia, $order['trangthai']);
 
-// Xóa
-$sql = "DELETE FROM `orderDetails`;";
-$conn->query($sql);
+// KHÔNG xóa dữ liệu cũ - đây là bug nghiêm trọng!
+// $sql = "DELETE FROM `orderdetails`;";
+// $conn->query($sql);
 
 
 // Thực thi câu lệnh SQL để thêm đơn hàng
 if ($stmtOrder->execute()) {
-    // Chuẩn bị câu lệnh SQL để thêm chi tiết đơn hàng vào bảng 'orderDetails'
-    $sqlOrderDetails = "INSERT INTO orderDetails (madon, product_id, note, product_price, soluong) VALUES (?, ?, ?, ?, ?)";
+    // Chuẩn bị câu lệnh SQL để thêm chi tiết đơn hàng vào bảng 'orderdetails'
+    $sqlOrderDetails = "INSERT INTO orderdetails (madon, product_id, note, product_price, soluong) VALUES (?, ?, ?, ?, ?)";
     $stmtOrderDetails = $conn->prepare($sqlOrderDetails);
     
     foreach ($orderDetails as $detail) {

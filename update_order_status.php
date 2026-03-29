@@ -36,21 +36,16 @@ $id = $data['id'];
 $trangthai = $data['trangthai'];
 
 // Cập nhật trạng thái đơn hàng trong cơ sở dữ liệu
-$sql = "UPDATE `order` SET trangthai = ? WHERE id = ?";
-$stmt = $conn->prepare($sql);
+// Sử dụng real_escape_string thay vì prepared statements
+$idEscaped = $conn->real_escape_string($id);
+$trangthaiEscaped = intval($trangthai);
 
-if ($stmt) {
-    $stmt->bind_param("is", $trangthai, $id);
+$sql = "UPDATE `order` SET trangthai = $trangthaiEscaped WHERE id = '$idEscaped'";
 
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "Cập nhật trạng thái đơn hàng thành công!"]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi thực thi câu lệnh: " . $stmt->error]);
-    }
-
-    $stmt->close();
+if ($conn->query($sql)) {
+    echo json_encode(["success" => true, "message" => "Cập nhật trạng thái đơn hàng thành công!"]);
 } else {
-    echo json_encode(["success" => false, "message" => "Lỗi khi chuẩn bị câu lệnh SQL: " . $conn->error]);
+    echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi cập nhật: " . $conn->error]);
 }
 
 $conn->close();
