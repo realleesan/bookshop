@@ -254,7 +254,7 @@ session_start();
                     <h3>Quản lý đơn hàng của bạn</h3>
                     <p>Xem chi tiết, trạng thái của những đơn hàng đã đặt.</p>
                 </div>
-                <div class="section">
+                <div class="order-history-section">
                     <div class="table">
                         <table width="100%">
                             <thead>
@@ -271,8 +271,6 @@ session_start();
                             </tbody>
                         </table>
                     </div>
-                </div>
-
                 </div>
             </div>
         </div>

@@ -637,7 +637,9 @@ function orderHistory() {
     document.getElementById('account-user').classList.remove('open');
     document.getElementById('trangchu').classList.add('hide');
     document.getElementById('order-history').classList.add('open');
-    //renderOrderProduct();
+    
+    // Tải lại danh sách đơn hàng khi mở trang
+    showOrder();
 }
 
 function emailIsValid(email) {
@@ -1398,6 +1400,13 @@ document.getElementById('forgot-email').addEventListener('input', function() {
 
 // Hàm hiển thị đơn hàng
 function showOrder(arr) {
+    // Nếu mảng trống hoặc không có tham số, lấy từ localStorage
+    if (!arr || arr.length === 0) {
+        let currentUser = JSON.parse(localStorage.getItem('currentuser'));
+        let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+        arr = orders.filter(o => o.khachhang === currentUser.phone);
+    }
+    
     let orderHtml = "";
     if(arr.length == 0) {
         orderHtml = `<td colspan="6">Không có dữ liệu</td>`;
@@ -1419,7 +1428,14 @@ function showOrder(arr) {
             `;
         });
     }
-    document.getElementById("showOrder").innerHTML = orderHtml;
+    
+    // Add null check for showOrder element
+    const showOrderElement = document.getElementById("showOrder");
+    if (showOrderElement) {
+        showOrderElement.innerHTML = orderHtml;
+    } else {
+        console.warn('showOrder element not found');
+    }
 }
 
 
@@ -1662,8 +1678,15 @@ function confirmCancelOrder() {
             const orderHistorySection = document.querySelector(".order-history-section");
             if (orderHistorySection) {
                 renderOrderProduct();
-            } else {
-                console.warn('Order history section not found');
+            }
+            
+            // Cập nhật bảng đơn hàng (nếu đang hiển thị)
+            const showOrderElement = document.getElementById("showOrder");
+            if (showOrderElement) {
+                let currentUser = JSON.parse(localStorage.getItem('currentuser'));
+                let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+                let userOrders = orders.filter(o => o.khachhang === currentUser.phone);
+                showOrder(userOrders);
             }
         } else {
             toast({ title: "Lỗi", message: data.message, type: "error", duration: 3000 });
