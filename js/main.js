@@ -1,5 +1,8 @@
 // Doi sang dinh dang tien VND
 function vnd(price) {
+    if (price == null || price == undefined || isNaN(price)) {
+        return '0 ₫';
+    }
     return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
 
@@ -858,8 +861,8 @@ function renderOrderProduct() {
                     </div>
                 </div>`;
             });
-            let textCompl = item.trangthai == 1 ? "Đã xử lý" : "Đang xử lý";
-            let classCompl = item.trangthai == 1 ? "complete" : "no-complete"
+            let textCompl = getStatusNameUser(item.trangthai);
+            let classCompl = getStatusClassUser(item.trangthai);
             productHtml += `<div class="order-history-control">
                 <div class="order-history-status">
                     <span class="order-history-status-sp ${classCompl}">${textCompl}</span>
@@ -874,7 +877,13 @@ function renderOrderProduct() {
             orderHtml += productHtml;
         });
     }
-    document.querySelector(".order-history-section").innerHTML = orderHtml;
+    // Add null check for order-history-section
+    const orderHistorySection = document.querySelector(".order-history-section");
+    if (orderHistorySection) {
+        orderHistorySection.innerHTML = orderHtml;
+    } else {
+        console.warn('Order history section not found');
+    }
 }
 
 // Get Order Details
@@ -1394,7 +1403,7 @@ function showOrder(arr) {
         orderHtml = `<td colspan="6">Không có dữ liệu</td>`;
     } else {
         arr.forEach((item) => {
-            let status = item.trangthai == 0 ? `<span class="status-no-complete">Chưa xử lý</span>` : `<span class="status-complete">Đã xử lý</span>`;
+            let status = `<span class="${getStatusClassUser(item.trangthai)}">${getStatusNameUser(item.trangthai)}</span>`;
             let date = formatDate(item.thoigiandat);
             orderHtml += `
             <tr>
@@ -1504,31 +1513,177 @@ function detailOrder(id) {
             </li>` : ''}
         </ul>
     </div>`;
-    document.querySelector(".modal-detail-order").innerHTML = spHtml;
+    
+    // Add null check for modal-detail-order
+    const modalDetailOrder = document.querySelector(".modal-detail-order");
+    if (!modalDetailOrder) {
+        console.error('modal-detail-order element not found');
+        return;
+    }
+    modalDetailOrder.innerHTML = spHtml;
 
-    let classDetailBtn = order.trangthai == 0 ? "btn-chuaxuly" : "btn-daxuly";
-    let textDetailBtn = order.trangthai == 0 ? "Chưa xử lý" : "Đã xử lý";
-    document.querySelector(
-        ".modal-detail-bottom"
-    ).innerHTML = `<div class="modal-detail-bottom-left">
+    // Sử dụng 4 trạng thái
+    let currentStatus = parseInt(order.trangthai);
+    let statusName = getStatusNameUser(currentStatus);
+    let statusClass = getStatusClassUser(currentStatus);
+    
+    // Hiển thị nút hủy đơn chỉ khi đơn hàng đang ở trạng thái chờ xử lý (0)
+    // Đặt nút hủy đơn cạnh bên Trạng thái, màu đỏ, nhỏ gọn
+    let cancelButtonHtml = currentStatus === 0 ? `<button class="btn-huy-don" onclick="openCancelOrderModal('${order.id}')">Hủy đơn</button>` : '';
+    
+    // Add null check for modal-detail-bottom
+    const modalDetailBottom = document.querySelector(".modal-detail-bottom");
+    if (!modalDetailBottom) {
+        console.error('modal-detail-bottom element not found');
+        return;
+    }
+    
+    modalDetailBottom.innerHTML = `<div class="modal-detail-bottom-left">
         <div class="price-total">
             <span class="thanhtien">Thành tiền</span>
             <span class="price">${vnd(order.tongtien)}</span>
         </div>
     </div>
     <div class="modal-detail-bottom-right">
-        <button class="modal-detail-btn ${classDetailBtn}" onclick="changeStatus('${order.id}',this)">${textDetailBtn}</button>
+        <span class="${statusClass}">${statusName}</span>
+        ${cancelButtonHtml}
     </div>`;
     
     // Check if products have been rated
     checkProductRatings(ctDon, order.id, products);
 }
 
+// Hàm lấy tên trạng thái (cho người dùng)
+function getStatusNameUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'Chờ xử lý';
+        case 1: return 'Đang xử lý';
+        case 2: return 'Đã xử lý';
+        case 3: return 'Đã hủy';
+        default: return 'Chờ xử lý';
+    }
+}
+
+// Hàm lấy class CSS cho trạng thái (cho người dùng)
+function getStatusClassUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'status-no-complete';    // Chờ xử lý - màu vàng
+        case 1: return 'status-processing';  // Đang xử lý - màu xanh dương
+        case 2: return 'status-complete';   // Đã xử lý - màu xanh lá
+        case 3: return 'status-cancelled';  // Đã hủy - màu đỏ
+        default: return 'status-no-complete';
+    }
+}
+
+// Xử lý nút đóng modal hủy đơn hàng
+document.querySelector('.cancel-order-close').addEventListener('click', function() {
+    closeCancelOrderModal();
+});
+
+// Hàm mở modal hủy đơn hàng
+function openCancelOrderModal(orderId) {
+    document.getElementById('cancel-order-id').value = orderId;
+    document.getElementById('cancel-confirm-text').value = '';
+    document.getElementById('cancel-password').value = '';
+    document.querySelector('.cancel-order-modal').classList.add('open');
+}
+
+// Hàm đóng modal hủy đơn hàng
+function closeCancelOrderModal() {
+    document.querySelector('.cancel-order-modal').classList.remove('open');
+}
+
+// Hàm xác nhận hủy đơn hàng
+function confirmCancelOrder() {
+    const orderId = document.getElementById('cancel-order-id').value;
+    const confirmText = document.getElementById('cancel-confirm-text').value;
+    const password = document.getElementById('cancel-password').value;
+    
+    // Kiểm tra input
+    if (!orderId || !confirmText || !password) {
+        toast({ title: "Chú ý", message: "Vui lòng nhập đầy đủ thông tin!", type: "warning", duration: 3000 });
+        return;
+    }
+    
+    if (confirmText !== "tôi xác nhận hủy") {
+        toast({ title: "Chú ý", message: 'Text xác nhận phải là "tôi xác nhận hủy"!', type: "warning", duration: 3000 });
+        return;
+    }
+    
+    // Lấy thông tin người dùng từ localStorage
+    let user = localStorage.getItem("currentuser") ? JSON.parse(localStorage.getItem("currentuser")) : null;
+    let phone = user ? user.phone : '';
+    
+    if (!phone) {
+        toast({ title: "Lỗi", message: "Không tìm thấy thông tin người dùng!", type: "error", duration: 3000 });
+        return;
+    }
+    
+    // Gọi API hủy đơn hàng
+    fetch('cancel_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            orderId: orderId,
+            phone: phone,
+            confirmText: confirmText,
+            password: password
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            toast({ title: "Thành công", message: data.message, type: "success", duration: 3000 });
+            
+            // Cập nhật trạng thái đơn hàng trong localStorage
+            let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+            let orderIndex = orders.findIndex(o => o.id === orderId);
+            if (orderIndex !== -1) {
+                orders[orderIndex].trangthai = 3;
+                localStorage.setItem("order", JSON.stringify(orders));
+            }
+            
+            closeCancelOrderModal();
+            
+            // Đóng modal chi tiết đơn hàng
+            const detailOrderModal = document.querySelector('.modal.detail-order');
+            if (detailOrderModal) {
+                detailOrderModal.classList.remove('open');
+            }
+            
+            // Tải lại danh sách đơn hàng
+            const orderHistorySection = document.querySelector(".order-history-section");
+            if (orderHistorySection) {
+                renderOrderProduct();
+            } else {
+                console.warn('Order history section not found');
+            }
+        } else {
+            toast({ title: "Lỗi", message: data.message, type: "error", duration: 3000 });
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling order:', error);
+        toast({ title: "Lỗi", message: "Đã xảy ra lỗi khi kết nối máy chủ! " + error.message, type: "error", duration: 3000 });
+    });
+}
+
 // Check if products in order have been rated
 function checkProductRatings(orderDetails, orderId, products) {
     orderDetails.forEach(item => {
         const statusElement = document.getElementById(`rating-status-${item.id}-${orderId}`);
-        if (!statusElement) return;
+        // Skip if element doesn't exist (modal might be closed)
+        if (!statusElement) {
+            console.warn('Rating status element not found, modal might be closed');
+            return;
+        }
         
         const orderIdNum = orderId.replace('DH', '');
         const product = products.find(p => p.id == item.id);
@@ -1536,17 +1691,33 @@ function checkProductRatings(orderDetails, orderId, products) {
         const productImg = product ? product.img : '';
         
         fetch(`api/rating.php?check_rating=1&order_id=${orderIdNum}&product_id=${item.id}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
+                // Check again if element still exists (modal might have been closed)
+                const currentElement = document.getElementById(`rating-status-${item.id}-${orderId}`);
+                if (!currentElement) {
+                    console.warn('Rating status element no longer exists, skipping update');
+                    return;
+                }
+                
                 if (data.success && data.has_rated) {
-                    statusElement.innerHTML = `<button class="btn-rated-product" disabled style="background:#28a745;color:#fff;padding:5px 10px;border:none;border-radius:4px;cursor:not-allowed;"><i class="fa-solid fa-check"></i> Đã đánh giá</button>`;
+                    currentElement.innerHTML = `<button class="btn-rated-product" disabled style="background:#28a745;color:#fff;padding:5px 10px;border:none;border-radius:4px;cursor:not-allowed;"><i class="fa-solid fa-check"></i> Đã đánh giá</button>`;
                 } else {
-                    statusElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '${productTitle}', '${productImg}')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
+                    currentElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '${productTitle}', '${productImg}')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
                 }
             })
             .catch(error => {
                 console.error('Error checking rating:', error);
-                statusElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '', '')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
+                // Safely handle error without crashing
+                const currentElement = document.getElementById(`rating-status-${item.id}-${orderId}`);
+                if (currentElement) {
+                    currentElement.innerHTML = `<button class="btn-rate-product" onclick="openRatingModal('${item.id}', '${orderId}', '', '')"><i class="fa-regular fa-star"></i> Đánh giá</button>`;
+                }
             });
     });
 }

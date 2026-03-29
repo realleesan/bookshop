@@ -2811,6 +2811,67 @@ tbody tr td {
     align-items: center;
 }
 
+/* Modal hủy đơn hàng */
+.cancel-order-modal .modal-container {
+    width: 450px;
+}
+
+.cancel-order-content {
+    padding: 20px;
+}
+
+.cancel-order-warning {
+    color: #e74c3c;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.cancel-order-note {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.cancel-order-form {
+    margin-top: 20px;
+}
+
+.cancel-order-form .form-group {
+    margin-bottom: 15px;
+}
+
+.cancel-order-form .form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 14px;
+}
+
+.cancel-order-form .form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.btn-cancel-order {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-cancel-order:hover {
+    background-color: #c0392b;
+}
+
 .price-total {
     display: flex;
     flex-direction: column;
@@ -2852,6 +2913,41 @@ tbody tr td {
     border-radius: 5px;
     font-size: 15px;
     display: inline-block;
+}
+
+.status-processing {
+    background-color: #3498db;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 15px;
+    display: inline-block;
+}
+
+.status-cancelled {
+    background-color: #e74c3c;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 15px;
+    display: inline-block;
+}
+
+/* Nút hủy đơn hàng trong modal chi tiết */
+.btn-huy-don {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+.btn-huy-don:hover {
+    background-color: #c0392b;
 }
 
 .btn-chuaxuly {

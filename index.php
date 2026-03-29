@@ -293,6 +293,29 @@ session_start();
             </form>
         </div>
     </div>
+    <!-- Modal hủy đơn hàng -->
+    <div class="modal cancel-order-modal">
+        <div class="modal-container">
+            <h3 class="modal-container-title">HỦY ĐƠN HÀNG</h3>
+            <button class="modal-close cancel-order-close"><i class="fa-regular fa-xmark"></i></button>
+            <div class="cancel-order-content">
+                <p class="cancel-order-warning">Bạn có chắc chắn muốn hủy đơn hàng này không?</p>
+                <p class="cancel-order-note">Lưu ý: Sau khi hủy, đơn hàng sẽ không thể khôi phục.</p>
+                <div class="cancel-order-form">
+                    <div class="form-group">
+                        <label class="form-label">Nhập "tôi xác nhận hủy" để xác nhận</label>
+                        <input type="text" class="form-input" id="cancel-confirm-text" placeholder="Nhập text xác nhận">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nhập mật khẩu của bạn</label>
+                        <input type="password" class="form-input" id="cancel-password" placeholder="Nhập mật khẩu">
+                    </div>
+                    <input type="hidden" id="cancel-order-id" value="">
+                    <button class="btn-cancel-order" onclick="confirmCancelOrder()">Xác nhận hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal rating-modal">
         <div class="modal-container">
             <h3 class="modal-container-title">ĐÁNH GIÁ SẢN PHẨM</h3>
@@ -466,9 +489,11 @@ session_start();
     </div>
     <div class="modal detail-order">
         <div class="modal-container mdl-cnt">
-            <h3 class="modal-container-title">Thông tin đơn hàng</h3>
+            <h3 class="modal-container-title">CHI TIẾT ĐƠN HÀNG</h3>
             <button class="form-close" onclick="closeModal()"><i class="fa-regular fa-xmark"></i></button>
-            <div class="detail-order-content">
+            <div class="modal-detail-order">
+            </div>
+            <div class="modal-detail-bottom">
             </div>
         </div>
     </div>

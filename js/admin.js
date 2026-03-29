@@ -89,6 +89,9 @@ document.getElementById("doanh-thu").innerHTML = vnd(getMoney());
 
 // Doi sang dinh dang tien VND
 function vnd(price) {
+    if (price == null || price == undefined || isNaN(price)) {
+        return '0 ₫';
+    }
     return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
 // Phân trang 
@@ -795,12 +798,18 @@ function detailOrder(id) {
         </ul>
     </div>`;
     document.querySelector(".modal-detail-order").innerHTML = spHtml;
-
+    
     // Hiển thị dropdown chọn trạng thái trong modal
     let currentStatus = parseInt(order.trangthai);
-    document.querySelector(
-        ".modal-detail-bottom"
-    ).innerHTML = `<div class="modal-detail-bottom-left">
+    
+    // Add null check for modal-detail-bottom
+    const modalDetailBottom = document.querySelector(".modal-detail-bottom");
+    if (!modalDetailBottom) {
+        console.error('modal-detail-bottom element not found');
+        return;
+    }
+    
+    modalDetailBottom.innerHTML = `<div class="modal-detail-bottom-left">
         <div class="price-total">
             <span class="thanhtien">Thành tiền</span>
             <span class="price">${vnd(order.tongtien)}</span>

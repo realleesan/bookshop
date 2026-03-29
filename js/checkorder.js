@@ -29,7 +29,29 @@ function showOrdersdt(arr) {
     } else {
         orderHtml = '<br><div class="main-account"><div class="main-account-header"><h3>Thông tin đơn hàng từ SĐT của bạn</h3><p>Xem chi tiết, trạng thái của những đơn hàng.</p></div><div class="section"><div class="table"><table width="100%"><thead><tr><td>Mã đơn</td><td>Tên người nhận</td><td>Ngày đặt</td><td>Tổng tiền</td><td>Trạng thái</td><td>Thao tác</td></tr></thead><tbody>';
         arr.forEach((item) => {
-            let status = item.trangthai === 0 ? `<span class="status-no-complete">Chưa xử lý</span>` : `<span class="status-complete">Đã xử lý</span>`;
+            // Hàm lấy tên trạng thái (cho người dùng)
+function getStatusNameUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'Chờ xử lý';
+        case 1: return 'Đang xử lý';
+        case 2: return 'Đã xử lý';
+        case 3: return 'Đã hủy';
+        default: return 'Chờ xử lý';
+    }
+}
+
+// Hàm lấy class CSS cho trạng thái (cho người dùng)
+function getStatusClassUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'status-no-complete';    // Chờ xử lý - màu vàng
+        case 1: return 'status-processing';  // Đang xử lý - màu xanh dương
+        case 2: return 'status-complete';   // Đã xử lý - màu xanh lá
+        case 3: return 'status-cancelled';  // Đã hủy - màu đỏ
+        default: return 'status-no-complete';
+    }
+}
+
+let status = `<span class="${getStatusClassUser(item.trangthai)}">${getStatusNameUser(item.trangthai)}</span>`;
             let date = formatDate(item.thoigiandat);
             orderHtml += `
             <tr>
@@ -50,6 +72,9 @@ function showOrdersdt(arr) {
 
 // Hàm định dạng tiền tệ (vnd)
 function vnd(price) {
+    if (price == null || price == undefined || isNaN(price)) {
+        return '0 ₫';
+    }
     return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
 
