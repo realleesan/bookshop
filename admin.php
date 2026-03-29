@@ -45,7 +45,7 @@
                     <li class="sidebar-list-item tab-content">
                         <a href="#" class="sidebar-link">
                             <div class="sidebar-icon"><i class="fa-light fa-users"></i></div>
-                            <div class="hidden-sidebar">Khách hàng</div>
+                            <div class="hidden-sidebar">Người dùng</div>
                         </a>
                     </li>
                     <li class="sidebar-list-item tab-content">
@@ -100,7 +100,7 @@
                             <h2 id="amount-user">0</h2>
                             <div class="on-box">
                                 <img src="assets/img/admin/s1.png" alt="" style=" width: 200px;">
-                                <h3>Khách hàng</h3>
+                                <h3>Người dùng</h3>
                                 <p>Sản phẩm là bất cứ cái gì có thể đưa vào thị trường để tạo sự chú ý, mua sắm, sử dụng
                                     hay tiêu dùng nhằm thỏa mãn một nhu cầu hay ước muốn. Nó có thể là những vật thể,
                                     dịch vụ, con người, địa điểm, tổ chức hoặc một ý tưởng.</p>
@@ -174,7 +174,7 @@
                     <div class="admin-control-center">
                         <form action="" class="form-search">
                             <span class="search-btn"><i class="fa-light fa-magnifying-glass"></i></span>
-                            <input id="form-search-user" type="text" class="form-search-input" placeholder="Tìm kiếm khách hàng..." oninput="showUser()">
+                            <input id="form-search-user" type="text" class="form-search-input" placeholder="Tìm kiếm người dùng..." oninput="showUser()">
                         </form>
                     </div>
                     <div class="admin-control-right">
@@ -189,7 +189,7 @@
                             </div>
                         </form>      
                         <button class="btn-reset-order" onclick="cancelSearchUser()"><i class="fa-light fa-arrow-rotate-right"></i></button>     
-                        <button id="btn-add-user" class="btn-control-large" onclick="openCreateAccount()"><i class="fa-light fa-plus"></i> <span>Thêm khách hàng</span></button>          
+                        <button id="btn-add-user" class="btn-control-large" onclick="openCreateAccount()"><i class="fa-light fa-plus"></i> <span>Thêm người dùng</span></button>          
                     </div>
                 </div>
                 <div class="table">
@@ -201,6 +201,7 @@
                                 <td>Liên hệ</td>
                                 <td>Ngày tham gia</td>
                                 <td>Tình trạng</td>
+                                <td>Vai trò</td>
                                 <td></td>
                             </tr>
                         </thead>

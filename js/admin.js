@@ -60,8 +60,9 @@ function getAmoumtProduct() {
 
 // Get amount user
 function getAmoumtUser() {
+    // Đếm TẤT CẢ người dùng (bao gồm cả admin và user)
     let accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : [];
-    return accounts.filter(item => item.userType == 0).length;
+    return accounts.length;
 }
 
 // Get amount user
@@ -923,16 +924,19 @@ function signUpFormReset() {
 function showUserArr(arr) {
     let accountHtml = '';
     if(arr.length == 0) {
-        accountHtml = `<td colspan="5">Không có dữ liệu</td>`
+        accountHtml = `<td colspan="7">Không có dữ liệu</td>`
     } else {
         arr.forEach((account, index) => {
             let tinhtrang = account.status == 0 ? `<span class="status-no-complete">Bị khóa</span>` : `<span class="status-complete">Hoạt động</span>`;
+            // Hiển thị vai trò: userType = 1 là Quản trị, userType = 0 là Người dùng
+            let vaitro = account.userType == 1 ? `<span class="status-admin">Quản trị</span>` : `<span class="status-user">Người dùng</span>`;
             accountHtml += ` <tr>
             <td>${index + 1}</td>
             <td>${account.fullname}</td>
             <td>${account.phone}</td>
             <td>${formatDate(account.join)}</td>
             <td>${tinhtrang}</td>
+            <td>${vaitro}</td>
             <td class="control control-table">
             <button class="btn-edit" id="edit-account" onclick='editAccount(${account.phone})' ><i class="fa-light fa-pen-to-square"></i></button>
             <button class="btn-delete" id="delete-account" onclick="deleteAccount('${account.phone}')"><i class="fa-regular fa-trash"></i></button>
@@ -954,7 +958,8 @@ function showUser() {
         return;
     }
 
-    let accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")).filter(item => item.userType == 0) : [];
+    // Hiển thị TẤT CẢ người dùng (bao gồm cả admin và user)
+    let accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : [];
     let result = tinhTrang == 2 ? accounts : accounts.filter(item => item.status == tinhTrang);
 
     result = ct == "" ? result : result.filter((item) => {
