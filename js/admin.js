@@ -74,7 +74,7 @@ function getMoney() {
     let tongtien = 0;
     let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
     orders.forEach(item => {
-        tongtien += item.tongtien
+        tongtien += parseInt(item.tongtien) || 0;
     });
     return tongtien;
 }
