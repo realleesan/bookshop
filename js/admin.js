@@ -37,6 +37,10 @@ for(let i = 0; i < sidebars.length; i++) {
         sidebars[i].classList.add("active");
         sections[i].classList.add("active");
         
+        // Load orders when clicking on orders tab (3rd tab = index 3)
+        if (i === 3) {
+            loadOrdersFromDB();
+        }
         // Load ratings when clicking on ratings tab (5th tab = index 5)
         if (i === 5) {
             loadRatings();
@@ -579,29 +583,69 @@ function showOrder(arr) {
 // Delete order
 function deleteOrder(orderId) {
     if(confirm("Bạn có chắc muốn xóa đơn hàng này? Hành động này không thể hoàn tác!") == true) {
-        let orders = JSON.parse(localStorage.getItem("order"));
-        let orderDetails = JSON.parse(localStorage.getItem("orderDetails"));
-        
-        // Remove order
-        orders = orders.filter(order => order.id != orderId);
-        
-        // Remove order details
-        if (orderDetails) {
-            orderDetails = orderDetails.filter(detail => detail.madon != orderId);
-        }
-        
-        localStorage.setItem("order", JSON.stringify(orders));
-        localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
-        
-        // Show updated list
-        showOrder(orders);
-        
-        toast({ title: 'Success', message: 'Xóa đơn hàng thành công!', type: 'success', duration: 3000 });
+        // Gọi API để xóa khỏi database trước
+        fetch('delete_order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: orderId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Chỉ xóa khỏi localStorage KHI API xóa thành công
+                let orders = JSON.parse(localStorage.getItem("order"));
+                let orderDetails = JSON.parse(localStorage.getItem("orderDetails"));
+                
+                // Remove order
+                orders = orders.filter(order => order.id != orderId);
+                
+                // Remove order details
+                if (orderDetails) {
+                    orderDetails = orderDetails.filter(detail => detail.madon != orderId);
+                }
+                
+                localStorage.setItem("order", JSON.stringify(orders));
+                localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
+                
+                // Show updated list
+                showOrder(orders);
+                
+                toast({ title: 'Success', message: data.message || 'Xóa đơn hàng thành công!', type: 'success', duration: 3000 });
+            } else {
+                toast({ title: 'Thất bại', message: data.message || 'Đã xảy ra lỗi khi xóa đơn hàng!', type: 'error', duration: 3000 });
+            }
+        })
+        .catch(error => {
+            toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi, vui lòng thử lại sau!', type: 'error', duration: 3000 });
+        });
     }
 }
 
-let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-window.onload = showOrder(orders);
+// Hàm tải đơn hàng từ database mỗi khi truy cập
+function loadOrdersFromDB() {
+    console.log('Đang tải đơn hàng từ database...');
+    Promise.all([
+        fetch('get_orders.php').then(r => r.json()),
+        fetch('get_order_details.php').then(r => r.json())
+    ])
+    .then(([orders, orderDetails]) => {
+        console.log('Đơn hàng tải thành công:', orders.length, 'đơn');
+        localStorage.setItem('order', JSON.stringify(orders));
+        localStorage.setItem('orderDetails', JSON.stringify(orderDetails));
+        showOrder(orders);
+    })
+    .catch(err => {
+        console.error('Lỗi tải đơn hàng:', err);
+        // Fallback: dùng localStorage nếu API fail
+        let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+        console.log('Dùng fallback với', orders.length, 'đơn');
+        showOrder(orders);
+    });
+}
+
+window.onload = loadOrdersFromDB;
 
 // Get Order Details
 function getOrderDetails(madon) {
