@@ -20,6 +20,7 @@ session_start();
     <link rel="stylesheet" href="./assets/css/admin-responsive.css">
     <link rel="stylesheet" href="./assets/css/toast-message.css">
     <link rel="stylesheet" href="./assets/css/gioithieu.css">
+    <link rel="stylesheet" href="./assets/css/chat-widget.css">
     <link rel="stylesheet" href="./assets/font/font-awesome-pro-v6-6.2.0/css/all.min.css"/>
 </head>
 <body>
@@ -629,35 +630,6 @@ session_start();
                         </div>
                     </div>
                     <div class="widget-row-col">
-                        <h3 class="widget-title">Liên kết</h3>
-                        <ul class="widget-contact">
-                            <li class="widget-contact-item">
-                                <a href="">
-                                    <i class="fa-regular fa-arrow-right"></i>
-                                    <span>Về chúng tôi</span>
-                                </a>
-                            </li>
-                            <li class="widget-contact-item">
-                                <a href="">
-                                    <i class="fa-regular fa-arrow-right"></i>
-                                    <span>Điều khoản</span>
-                                </a>
-                            </li>
-                            <li class="widget-contact-item">
-                                <a href="">
-                                    <i class="fa-regular fa-arrow-right"></i>
-                                    <span>Liên hệ</span>
-                                </a>
-                            </li>
-                            <li class="widget-contact-item">
-                                <a href="">
-                                    <i class="fa-regular fa-arrow-right"></i>
-                                    <span>Tin tức</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="widget-row-col">
                         <h3 class="widget-title">Sách giáo khoa</h3>
                         <ul class="widget-contact">
                             <li class="widget-contact-item">
@@ -893,6 +865,7 @@ session_start();
     <script src="./js/checkout.js?v=2"></script>
     <script src="./js/checkorder.js"></script>
     <script src="./js/toast-message.js"></script>
+    <script src="./js/chat-widget.js"></script>
     <script>
         createProduct();
         createAdminAccount();

@@ -638,8 +638,32 @@ function orderHistory() {
     document.getElementById('trangchu').classList.add('hide');
     document.getElementById('order-history').classList.add('open');
     
-    // Tải lại danh sách đơn hàng khi mở trang
-    showOrder();
+    // Tải lại danh sách đơn hàng từ server khi mở trang để đảm bảo dữ liệu mới nhất
+    refreshOrdersFromServer();
+}
+
+// Hàm làm mới đơn hàng từ server
+function refreshOrdersFromServer() {
+    fetch('get_orders.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP error: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(orders => {
+            // Cập nhật localStorage với dữ liệu mới từ server
+            localStorage.setItem('order', JSON.stringify(orders));
+            
+            // Cập nhật UI
+            showOrder();
+            renderOrderProduct();
+        })
+        .catch(error => {
+            console.error('Error fetching orders:', error);
+            // Nếu lỗi, vẫn hiển thị dữ liệu cũ từ localStorage
+            showOrder();
+        });
 }
 
 function emailIsValid(email) {
@@ -851,7 +875,7 @@ function renderOrderProduct() {
                     <div class="order-history-left">
                         <img src="${infosp.img}" alt="">
                         <div class="order-history-info">
-                            <h4>${infosp.title}!</h4>
+                            <h4>${infosp.title}</h4>
                             <p class="order-history-note"><i class="fa-light fa-pen"></i> ${sp.note}</p>
                             <p class="order-history-quantity">x${sp.soluong}</p>
                         </div>
@@ -892,9 +916,15 @@ function renderOrderProduct() {
 function getOrderDetails(madon) {
     let orderDetails = localStorage.getItem("orderDetails") ? JSON.parse(localStorage.getItem("orderDetails")) : [];
     let ctDon = [];
+    // Use a Set to track unique product IDs to prevent duplicates
+    let seenProducts = new Set();
     orderDetails.forEach(item => {
         if(item.madon == madon) {
-            ctDon.push(item);
+            // Skip if this product ID was already added for this order
+            if (!seenProducts.has(item.id)) {
+                seenProducts.add(item.id);
+                ctDon.push(item);
+            }
         }
     });
     return ctDon;
@@ -1449,9 +1479,15 @@ function getOrderDetails(madon) {
     let orderDetails = localStorage.getItem("orderDetails") ?
         JSON.parse(localStorage.getItem("orderDetails")) : [];
     let ctDon = [];
+    // Use a Set to track unique product IDs to prevent duplicates
+    let seenProducts = new Set();
     orderDetails.forEach((item) => {
         if (item.madon == madon) {
-            ctDon.push(item);
+            // Skip if this product ID was already added for this order
+            if (!seenProducts.has(item.id)) {
+                seenProducts.add(item.id);
+                ctDon.push(item);
+            }
         }
     });
     return ctDon;
@@ -1476,7 +1512,7 @@ function detailOrder(id) {
                 <div class="order-product-info">
                     <h4>${detaiSP.title}</h4>
                     <p class="order-product-note"><i class="fa-light fa-pen"></i> ${item.note}</p>
-                    <p class="order-product-quantity">SL: ${item.soluong}<p>${order.trangthai == 1 ? `<br><span class="rating-status" id="rating-status-${item.id}-${order.id}"><i class="fa-regular fa-spinner fa-spin"></i> Kiểm tra...</i></span>` : ''}
+                    <p class="order-product-quantity">SL: ${item.soluong}<p>${order.trangthai == 2 ? `<br><span class="rating-status" id="rating-status-${item.id}-${order.id}"><i class="fa-regular fa-spinner fa-spin"></i> Kiểm tra...</i></span>` : ''}
                 </div>
             </div>
             <div class="order-product-right">
@@ -1674,20 +1710,8 @@ function confirmCancelOrder() {
                 detailOrderModal.classList.remove('open');
             }
             
-            // Tải lại danh sách đơn hàng
-            const orderHistorySection = document.querySelector(".order-history-section");
-            if (orderHistorySection) {
-                renderOrderProduct();
-            }
-            
-            // Cập nhật bảng đơn hàng (nếu đang hiển thị)
-            const showOrderElement = document.getElementById("showOrder");
-            if (showOrderElement) {
-                let currentUser = JSON.parse(localStorage.getItem('currentuser'));
-                let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-                let userOrders = orders.filter(o => o.khachhang === currentUser.phone);
-                showOrder(userOrders);
-            }
+            // Tải lại danh sách đơn hàng từ server để đảm bảo dữ liệu đồng bộ
+            refreshOrdersFromServer();
         } else {
             toast({ title: "Lỗi", message: data.message, type: "error", duration: 3000 });
         }

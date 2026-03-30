@@ -30,7 +30,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET' && isset($_GET['product_id'])) {
     $product_id = intval($_GET['product_id']);
     
-    $sql = "SELECT r.*, u.fullname, u.email FROM ratings r 
+    $sql = "SELECT r.*, COALESCE(r.user_fullname, u.fullname, 'Ẩn danh') as display_name, u.email FROM ratings r 
             LEFT JOIN users u ON r.user_id = u.id 
             WHERE r.product_id = ? 
             ORDER BY r.created_at DESC";
@@ -72,6 +72,7 @@ if ($method === 'POST') {
     
     $product_id = $data['product_id'] ?? 0;
     $user_id = $data['user_id'] ?? 0;
+    $user_fullname = $data['user_fullname'] ?? '';
     $order_id = $data['order_id'] ?? 0;
     $rating = $data['rating'] ?? 0;
     $comment = $data['comment'] ?? '';
@@ -137,9 +138,9 @@ if ($method === 'POST') {
         exit;
     } else {
         // Insert new rating
-        $insertSql = "INSERT INTO ratings (product_id, user_id, order_id, rating, comment) VALUES (?, ?, ?, ?, ?)";
+        $insertSql = "INSERT INTO ratings (product_id, user_id, order_id, rating, comment, user_fullname) VALUES (?, ?, ?, ?, ?, ?)";
         $insertStmt = $conn->prepare($insertSql);
-        $insertStmt->bind_param("iiiis", $product_id, $user_id, $order_id, $rating, $comment);
+        $insertStmt->bind_param("iiiiss", $product_id, $user_id, $order_id, $rating, $comment, $user_fullname);
         
         if ($insertStmt->execute()) {
             echo json_encode(["success" => true, "message" => "Đánh giá thành công!"]);
@@ -184,7 +185,7 @@ if ($method === 'GET' && isset($_GET['check_rating'])) {
 
 // Get all ratings (for admin)
 if ($method === 'GET' && isset($_GET['admin']) && $_GET['admin'] === 'all') {
-    $sql = "SELECT r.*, p.title as product_title, u.fullname, u.email 
+    $sql = "SELECT r.*, p.title as product_title, COALESCE(r.user_fullname, u.fullname, '') as display_name, u.email 
             FROM ratings r
             LEFT JOIN products p ON r.product_id = p.id
             LEFT JOIN users u ON r.user_id = u.id

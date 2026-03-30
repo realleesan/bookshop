@@ -49,6 +49,10 @@ for(let i = 0; i < sidebars.length; i++) {
         if (i === 5) {
             loadRatings();
         }
+        // Load CSKH when clicking on CSKH tab (7th tab = index 6)
+        if (i === 6) {
+            initCSKH();
+        }
     };
 }
 
@@ -516,8 +520,6 @@ function changeStatus(id, newStatus) {
     let orders = JSON.parse(localStorage.getItem("order"));
     let order = orders.find((item) => item.id == id);
 
-    
-
     // Gửi yêu cầu AJAX tới PHP để cập nhật trạng thái đơn hàng trong database
     fetch('update_order_status.php', {
         method: 'POST',
@@ -526,25 +528,44 @@ function changeStatus(id, newStatus) {
         },
         body: JSON.stringify({ id: id, trangthai: parseInt(newStatus) })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Cập nhật trạng thái đơn hàng trong localStorage
-    order.trangthai = parseInt(newStatus);
-    // Removed old button code
-    el.classList.add("btn-daxuly");
-    el.innerHTML = "Đã xử lý";
-    localStorage.setItem("order", JSON.stringify(orders));
-    
-    findOrder(orders);
-            toast({ title: 'Success', message: 'Cập nhật trạng thái đơn hàng thành công!', type: 'success', duration: 3000 });
+            order.trangthai = parseInt(newStatus);
+            localStorage.setItem("order", JSON.stringify(orders));
+            
+            // Reload orders from server to ensure sync
+            fetch('get_orders.php')
+                .then(r => r.json())
+                .then(serverOrders => {
+                    localStorage.setItem('order', JSON.stringify(serverOrders));
+                    showOrder(serverOrders);
+                });
+            
+            // Cập nhật button hiển thị
+            const statusSelect = document.querySelector('.status-select-modal');
+            if (statusSelect) {
+                // Update the visual display based on new status
+                const statusName = getStatusNameUser(newStatus);
+                const statusClass = getStatusClassUser(newStatus);
+                statusSelect.innerHTML = `<span class="${statusClass}">${statusName}</span>`;
+            }
+            
+            toast({ title: 'Thành công', message: 'Cập nhật trạng thái đơn hàng thành công!', type: 'success', duration: 3000 });
         } else {
-            toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng!', type: 'error', duration: 3000 });
+            // Hiển thị message từ server nếu có
+            toast({ title: 'Thất bại', message: data.message || 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng!', type: 'error', duration: 3000 });
         }
     })
     .catch(error => {
-        //console.error('Error:', error);
-        toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi, vui lòng thử lại sau!', type: 'error', duration: 3000 });
+        console.error('Error:', error);
+        toast({ title: 'Thất bại', message: 'Đã xảy ra lỗi kết nối: ' + error.message, type: 'error', duration: 3000 });
     });
 }
 
@@ -558,6 +579,28 @@ function formatDate(date) {
     if (dd < 10) dd = "0" + dd;
     if (mm < 10) mm = "0" + mm;
     return dd + "/" + mm + "/" + yyyy;
+}
+
+// Hàm lấy tên trạng thái (cho người dùng)
+function getStatusNameUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'Chờ xử lý';
+        case 1: return 'Đang xử lý';
+        case 2: return 'Đã xử lý';
+        case 3: return 'Đã hủy';
+        default: return 'Chờ xử lý';
+    }
+}
+
+// Hàm lấy class CSS cho trạng thái (cho người dùng)
+function getStatusClassUser(trangthai) {
+    switch(parseInt(trangthai)) {
+        case 0: return 'status-no-complete';    // Chờ xử lý - màu vàng
+        case 1: return 'status-processing';  // Đang xử lý - màu xanh dương
+        case 2: return 'status-complete';   // Đã xử lý - màu xanh lá
+        case 3: return 'status-cancelled';  // Đã hủy - màu đỏ
+        default: return 'status-no-complete';
+    }
 }
 
 // Hàm lấy tên trạng thái
@@ -697,9 +740,15 @@ function getOrderDetails(madon) {
     let orderDetails = localStorage.getItem("orderDetails") ?
         JSON.parse(localStorage.getItem("orderDetails")) : [];
     let ctDon = [];
+    // Use a Set to track unique product IDs to prevent duplicates
+    let seenProducts = new Set();
     orderDetails.forEach((item) => {
         if (item.madon == madon) {
-            ctDon.push(item);
+            // Skip if this product ID was already added for this order
+            if (!seenProducts.has(item.id)) {
+                seenProducts.add(item.id);
+                ctDon.push(item);
+            }
         }
     });
     return ctDon;
@@ -1054,7 +1103,7 @@ function signUpFormReset() {
 function showUserArr(arr) {
     let accountHtml = '';
     if(arr.length == 0) {
-        accountHtml = `<td colspan="7">Không có dữ liệu</td>`
+        accountHtml = `<td colspan="8">Không có dữ liệu</td>`
     } else {
         arr.forEach((account, index) => {
             let tinhtrang = account.status == 0 ? `<span class="status-no-complete">Bị khóa</span>` : `<span class="status-complete">Hoạt động</span>`;
@@ -1064,6 +1113,7 @@ function showUserArr(arr) {
             <td>${index + 1}</td>
             <td>${account.fullname}</td>
             <td>${account.phone}</td>
+            <td>${account.email || ''}</td>
             <td>${formatDate(account.join)}</td>
             <td>${tinhtrang}</td>
             <td>${vaitro}</td>
@@ -1239,6 +1289,7 @@ function editAccount(phone) {
     document.getElementById("fullname").value = account.fullname || '';
     document.getElementById("phone").value = String(account.phone) || '';
     document.getElementById("password").value = account.password || '';
+    document.getElementById("email").value = account.email || '';
     // Sửa logic status: status = 1 hoặc "1" hoặc true = checked
     const isActive = account.status == 1 || account.status === "1" || account.status === true;
     document.getElementById("user-status").checked = isActive;
@@ -1253,6 +1304,7 @@ function updateAccountFunc(e) {
     let fullname = document.getElementById("fullname").value;
     let phone = document.getElementById("phone").value;
     let password = document.getElementById("password").value;
+    let email = document.getElementById("email").value;
     let status = document.getElementById("user-status").checked;
     
     // Validate
@@ -1267,6 +1319,7 @@ function updateAccountFunc(e) {
         accounts[index].fullname = fullname;
         accounts[index].phone = phone;
         accounts[index].password = password;
+        accounts[index].email = email;
         accounts[index].status = status;
         localStorage.setItem("accounts", JSON.stringify(accounts));
     }
@@ -1281,12 +1334,24 @@ function updateAccountFunc(e) {
                 fullname: fullname,
                 phone: phone,
                 password: password,
+                email: email,
                 status: status
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Cập nhật localStorage
+                let accounts = JSON.parse(localStorage.getItem("accounts"));
+                let index = accounts.findIndex(item => String(item.phone) === String(phone));
+                if (index !== -1) {
+                    accounts[index].fullname = fullname;
+                    accounts[index].phone = phone;
+                    accounts[index].password = password;
+                    accounts[index].email = email;
+                    accounts[index].status = status;
+                    localStorage.setItem("accounts", JSON.stringify(accounts));
+                }
                 toast({ title: 'Thành công', message: 'Thay đổi thông tin thành công!', type: 'success', duration: 3000 });
                 document.querySelector(".signup").classList.remove("open");
                 signUpFormReset();
@@ -1386,7 +1451,7 @@ function displayRatings(ratings) {
         const date = new Date(rating.created_at).toLocaleDateString('vi-VN');
         const stars = '★'.repeat(rating.rating) + '☆'.repeat(5 - rating.rating);
         const productTitle = rating.product_title || 'Sản phẩm #' + rating.product_id;
-        const userName = rating.fullname || rating.email || 'Ẩn danh';
+        const userName = rating.display_name || rating.fullname || rating.email || 'Ẩn danh';
         
         html += `
             <tr>

@@ -126,6 +126,7 @@ function submitRating() {
     
     // Handle user_id - use id if available, otherwise use phone as fallback
     const userId = user.id || user.phone;
+    const userFullname = user.fullname || '';
     
     // Handle order_id - extract numeric part from "DH1" format
     const orderIdNum = orderId.replace('DH', '');
@@ -133,6 +134,7 @@ function submitRating() {
     const ratingData = {
         product_id: parseInt(productId),
         user_id: userId,
+        user_fullname: userFullname,
         order_id: orderIdNum,
         rating: currentRating,
         comment: comment
@@ -228,7 +230,7 @@ function loadProductReviews(productId) {
             reviewsHtml += `
                 <div class="review-item">
                     <div class="review-header">
-                        <span class="reviewer-name">${review.fullname || 'Ẩn danh'}</span>
+                        <span class="reviewer-name">${review.display_name || 'Ẩn danh'}</span>
                         <span class="review-date">${date}</span>
                     </div>
                     <div class="review-stars">${getStarDisplay(review.rating)}</div>

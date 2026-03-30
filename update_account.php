@@ -35,6 +35,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 $fullname = $data['fullname'];
 $phone = $data['phone'];
 $password = $data['password'];
+$email = $data['email'];
 $status = $data['status'];
 
 // Chuyển đổi status sang số nguyên
@@ -45,8 +46,9 @@ $statusInt = $status ? 1 : 0;
 $fullnameEscaped = $conn->real_escape_string($fullname);
 $phoneEscaped = $conn->real_escape_string($phone);
 $passwordEscaped = $conn->real_escape_string($password);
+$emailEscaped = $conn->real_escape_string($email);
 
-$sql = "UPDATE users SET fullname = '$fullnameEscaped', password = '$passwordEscaped', status = $statusInt WHERE phone = '$phoneEscaped'";
+$sql = "UPDATE users SET fullname = '$fullnameEscaped', password = '$passwordEscaped', email = '$emailEscaped', status = $statusInt WHERE phone = '$phoneEscaped'";
 
 if ($conn->query($sql)) {
     echo json_encode(["success" => true, "message" => "Cập nhật tài khoản thành công!"]);

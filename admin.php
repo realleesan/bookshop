@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='./assets/img/iconlogo.jpg' rel='icon' type='image/x-icon' />
     <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="assets/css/admin-cskh.css">
     <link rel="stylesheet" href="./assets/css/toast-message.css">
     <link href="./assets/font/font-awesome-pro-v6-6.2.0/css/all.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="./assets/css/admin-responsive.css">
@@ -64,6 +65,12 @@
                         <a href="#" class="sidebar-link">
                             <div class="sidebar-icon"><i class="fa-light fa-star"></i></div>
                             <div class="hidden-sidebar">Đánh giá</div>
+                        </a>
+                    </li>
+                    <li class="sidebar-list-item tab-content" data-tab="cskh">
+                        <a href="#" class="sidebar-link">
+                            <div class="sidebar-icon"><i class="fa-light fa-headset"></i></div>
+                            <div class="hidden-sidebar">CSKH</div>
                         </a>
                     </li>
                 </ul>
@@ -198,7 +205,8 @@
                             <tr>
                                 <td>STT</td>
                                 <td>Họ và tên</td>
-                                <td>Liên hệ</td>
+                                <td>Số điện thoại</td>
+                                <td>Email</td>
                                 <td>Ngày tham gia</td>
                                 <td>Tình trạng</td>
                                 <td>Vai trò</td>
@@ -363,6 +371,37 @@
                     </table>
                 </div>
             </div>
+            <!-- CSKH Chat -->
+            <div class="section" id="cskh-section">
+                <div class="admin-control">
+                    <div class="admin-control-left">
+                        <h2 class="page-title">Chăm sóc khách hàng</h2>
+                    </div>
+                </div>
+                <div class="cskh-container">
+                    <div class="cskh-user-list">
+                        <h3>Danh sách cuộc trò chuyện</h3>
+                        <div id="cskh-conversations">
+                            <div class="cskh-empty">Đang tải...</div>
+                        </div>
+                    </div>
+                    <div class="cskh-chat-area">
+                        <div class="cskh-chat-header" id="cskh-chat-header">
+                            <span>Chọn một cuộc trò chuyện</span>
+                        </div>
+                        <div class="cskh-messages" id="cskh-messages">
+                            <div class="cskh-empty">Vui lòng chọn cuộc trò chuyện từ danh sách bên trái</div>
+                        </div>
+                        <div class="cskh-input-area">
+                            <textarea class="cskh-input" id="cskh-input" placeholder="Nhập tin nhắn trả lời..." 
+                                onkeydown="handleCSKHKeyDown(event)"></textarea>
+                            <button class="cskh-send-btn" id="cskh-send-btn" onclick="sendCSKHMessage()">
+                                <i class="fa-light fa-paper-plane"></i> Gửi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
     <div class="modal add-product">
@@ -470,6 +509,11 @@
                         <span class="form-message-phone form-message"></span>
                     </div>
                     <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="text" placeholder="Nhập email" class="form-control">
+                        <span class="form-message-email form-message"></span>
+                    </div>
+                    <div class="form-group">
                         <label for="password" class="form-label">Mật khẩu</label>
                         <input id="password" name="password" type="text" placeholder="Nhập mật khẩu" class="form-control">
                         <span class="form-message-password form-message"></span>
@@ -488,6 +532,7 @@
     </div>
     <div id="toast"></div>
     <script src="./js/admin.js?v=2"></script>
+    <script src="./js/admin-cskh.js"></script>
     <script src="./js/toast-message.js"></script>
 </body>
 </html>

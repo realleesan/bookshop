@@ -45,7 +45,10 @@ $sql = "UPDATE `order` SET trangthai = $trangthaiEscaped WHERE id = '$idEscaped'
 if ($conn->query($sql)) {
     echo json_encode(["success" => true, "message" => "Cập nhật trạng thái đơn hàng thành công!"]);
 } else {
-    echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi cập nhật: " . $conn->error]);
+    $errorMsg = $conn->error;
+    // Encode error message to UTF-8 safely
+    $errorMsg = mb_convert_encoding($errorMsg, 'UTF-8', 'UTF-8');
+    echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi cập nhật: " . $errorMsg]);
 }
 
 $conn->close();

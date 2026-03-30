@@ -165,6 +165,17 @@ function formatDate(dateString) {
 function getOrderDetails(madon) {
     let orderDetails = localStorage.getItem("orderDetails") ?
         JSON.parse(localStorage.getItem("orderDetails")) : [];
-    let ctDon = orderDetails.filter(item => item.madon == madon);
+    // Use a Set to track unique product IDs to prevent duplicates
+    let seenProducts = new Set();
+    let ctDon = orderDetails.filter(item => {
+        if (item.madon == madon) {
+            // Skip if this product ID was already added for this order
+            if (!seenProducts.has(item.id)) {
+                seenProducts.add(item.id);
+                return true;
+            }
+        }
+        return false;
+    });
     return ctDon;
 }
