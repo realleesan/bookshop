@@ -20,7 +20,7 @@
 .cskh-user-list h3 {
     padding: 15px;
     margin: 0;
-    background: #007bff;
+    background: #dc3545;
     color: white;
     font-size: 16px;
 }
@@ -42,8 +42,8 @@
 }
 
 .cskh-user-item.active {
-    background: #e7f1ff;
-    border-left: 3px solid #007bff;
+    background: #fce4e6;
+    border-left: 3px solid #dc3545;
 }
 
 .cskh-user-name {
@@ -88,9 +88,26 @@
 
 .cskh-chat-header {
     padding: 15px;
-    background: #007bff;
+    background: #dc3545;
     color: white;
     font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cskh-chat-header .cskh-delete-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.cskh-chat-header .cskh-delete-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .cskh-messages {
@@ -132,7 +149,7 @@
 }
 
 .cskh-message.admin .cskh-message-bubble {
-    background: #007bff;
+    background: #dc3545;
     color: white;
     border-bottom-right-radius: 4px;
 }
@@ -171,12 +188,12 @@
 }
 
 .cskh-input:focus {
-    border-color: #007bff;
+    border-color: #dc3545;
 }
 
 .cskh-send-btn {
     padding: 10px 20px;
-    background: #007bff;
+    background: #dc3545;
     color: white;
     border: none;
     border-radius: 24px;
@@ -186,7 +203,7 @@
 }
 
 .cskh-send-btn:hover {
-    background: #0056b3;
+    background: #b02a37;
 }
 
 .cskh-send-btn:disabled {

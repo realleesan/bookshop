@@ -1,5 +1,6 @@
 // CSKH Chat Functions for Admin
 let selectedUserId = null;
+let selectedUserName = null;
 let cskhInterval = null;
 
 // Initialize CSKH when tab is clicked
@@ -22,7 +23,15 @@ async function loadConversations() {
         }
         
         container.innerHTML = conversations.map(conv => {
-            const userName = conv.fullname || conv.phone || 'User #' + conv.user_id;
+            // Priority: fullname > phone > user_id
+            let userName = conv.fullname;
+            if (!userName || userName.trim() === '') {
+                userName = conv.phone;
+            }
+            if (!userName || userName.trim() === '') {
+                userName = 'Khách hàng';
+            }
+            
             const lastMessage = conv.last_message || 'Chưa có tin nhắn';
             const lastTime = conv.last_message_at ? new Date(conv.last_message_at).toLocaleString('vi-VN', {
                 day: '2-digit',
@@ -53,6 +62,7 @@ async function loadConversations() {
 // Select a conversation
 async function selectConversation(userId, userName) {
     selectedUserId = userId;
+    selectedUserName = userName;
     
     // Update active state in list
     document.querySelectorAll('.cskh-user-item').forEach(item => {
@@ -60,8 +70,13 @@ async function selectConversation(userId, userName) {
     });
     event.target.closest('.cskh-user-item').classList.add('active');
     
-    // Update header
-    document.getElementById('cskh-chat-header').innerHTML = `<span>Chat với: ${userName}</span>`;
+    // Update header with delete button
+    document.getElementById('cskh-chat-header').innerHTML = `
+        <span>Chat với: ${userName}</span>
+        <button class="cskh-delete-btn" onclick="deleteConversation()">
+            <i class="fa-light fa-trash"></i> Xóa
+        </button>
+    `;
     
     // Load messages
     await loadMessages(userId);
@@ -100,6 +115,46 @@ async function loadMessages(userId) {
         container.scrollTop = container.scrollHeight;
     } catch (error) {
         console.error('Error loading messages:', error);
+    }
+}
+
+// Delete conversation
+async function deleteConversation() {
+    if (!selectedUserId) return;
+    
+    if (!confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/chat_delete_conversation.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: selectedUserId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            selectedUserId = null;
+            selectedUserName = null;
+            
+            // Reset chat area
+            document.getElementById('cskh-chat-header').innerHTML = '<span>Chọn một cuộc trò chuyện</span>';
+            document.getElementById('cskh-messages').innerHTML = '<div class="cskh-empty">Vui lòng chọn cuộc trò chuyện từ danh sách bên trái</div>';
+            
+            // Reload conversations
+            loadConversations();
+        } else {
+            alert('Không thể xóa cuộc trò chuyện: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error deleting conversation:', error);
+        alert('Lỗi kết nối');
     }
 }
 
@@ -144,6 +199,7 @@ async function sendCSKHMessage() {
         if (result.success) {
             input.value = '';
             loadMessages(selectedUserId);
+            loadConversations(); // Refresh to update last message
         } else {
             alert('Không thể gửi tin nhắn: ' + result.error);
         }
