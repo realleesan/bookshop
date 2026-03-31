@@ -73,6 +73,12 @@
                             <div class="hidden-sidebar">CSKH</div>
                         </a>
                     </li>
+                    <li class="sidebar-list-item tab-content" data-tab="settings">
+                        <a href="#" class="sidebar-link">
+                            <div class="sidebar-icon"><i class="fa-light fa-gear"></i></div>
+                            <div class="hidden-sidebar">Cấu hình</div>
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="bottom-sidebar">
@@ -399,6 +405,30 @@
                                 <i class="fa-light fa-paper-plane"></i> Gửi
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Settings Section -->
+            <div class="section" id="settings-section">
+                <div class="admin-control">
+                    <div class="admin-control-left">
+                        <h2 class="page-title">Cấu hình hệ thống</h2>
+                    </div>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-card">
+                        <h3><i class="fa-light fa-tag"></i> Mã giảm giá đăng ký</h3>
+                        <p class="settings-desc">Thiết lập % giảm giá khi khách đăng ký nhận mã ở footer</p>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label for="footer-discount-percent" class="form-label">Phần trăm giảm giá (%)</label>
+                                <input type="number" id="footer-discount-percent" class="form-control" placeholder="10" min="1" max="100" value="10">
+                            </div>
+                            <button type="button" class="btn-save-settings" onclick="saveFooterDiscount()">
+                                <i class="fa-light fa-save"></i> Lưu
+                            </button>
+                        </div>
+                        <p id="settings-message" class="settings-message"></p>
                     </div>
                 </div>
             </div>

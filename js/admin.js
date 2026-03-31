@@ -53,6 +53,10 @@ for(let i = 0; i < sidebars.length; i++) {
         if (i === 6) {
             initCSKH();
         }
+        // Load Settings when clicking on Settings tab (8th tab = index 7)
+        if (i === 7) {
+            loadFooterDiscount();
+        }
     };
 }
 
@@ -807,6 +811,10 @@ function detailOrder(id) {
     spHtml += `<div class="modal-detail-right">
         <ul class="detail-order-group">
             <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-barcode"></i> Mã đơn hàng</span>
+                <span class="detail-order-item-right">${order.id}</span>
+            </li>
+            <li class="detail-order-item">
                 <span class="detail-order-item-left"><i class="fa-light fa-calendar-days"></i> Ngày đặt hàng</span>
                 <span class="detail-order-item-right">${formatDate(order.thoigiandat)}</span>
             </li>
@@ -1496,7 +1504,57 @@ function deleteRating(ratingId) {
 }
 
 
+// ===== SETTINGS =====
 
+// Load footer discount percentage from server
+function loadFooterDiscount() {
+    fetch('api/coupon.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=get_default_discount'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('footer-discount-percent').value = data.discount_percent;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading footer discount:', error);
+    });
+}
 
-
+// Save footer discount percentage
+function saveFooterDiscount() {
+    const discount = document.getElementById('footer-discount-percent').value;
+    
+    fetch('api/coupon.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=update_default_discount&discount=' + discount
+    })
+    .then(response => response.json())
+    .then(data => {
+        const messageEl = document.getElementById('settings-message');
+        if (data.success) {
+            messageEl.textContent = data.message;
+            messageEl.style.color = 'green';
+            // Save to localStorage for footer to use
+            localStorage.setItem('footer_discount_percent', discount);
+            toast({title: 'Thành công', message: data.message, type: 'success', duration: 3000});
+        } else {
+            messageEl.textContent = data.message;
+            messageEl.style.color = 'red';
+            toast({title: 'Lỗi', message: data.message, type: 'error', duration: 3000});
+        }
+    })
+    .catch(error => {
+        console.error('Error saving footer discount:', error);
+        toast({title: 'Lỗi', message: 'Đã xảy ra lỗi', type: 'error', duration: 3000});
+    });
+}
 

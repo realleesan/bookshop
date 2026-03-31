@@ -566,12 +566,32 @@ function kiemtradangnhap() {
     let currentUser = localStorage.getItem('currentuser');
     if (currentUser != null) {
         let user = JSON.parse(currentUser);
-        document.querySelector('.auth-container').innerHTML = `<span class="text-dndk">Tài khoản</span>
-            <span class="text-tk">${user.fullname} <i class="fa-sharp fa-solid fa-caret-down"></span>`
-        document.querySelector('.header-middle-right-menu').innerHTML = `<li><a href="javascript:;" onclick="myAccount()"><i class="fa-light fa-circle-user"></i> Tài khoản của tôi</a></li>
-            <li><a href="javascript:;" onclick="orderHistory()"><i class="fa-regular fa-bags-shopping"></i> Đơn hàng đã mua</a></li>
-            <li class="border"><a id="logout" href="javascript:;"><i class="fa-light fa-right-from-bracket"></i class="updateCart1"> Thoát tài khoản</a></li>`
-        document.querySelector('#logout').addEventListener('click',logOut)
+        // Sync user data from server to ensure latest info
+        fetch('api/get_user.php?phone=' + user.phone)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update localStorage with latest data from server
+                localStorage.setItem('currentuser', JSON.stringify(data.user));
+                user = data.user;
+            }
+            // Update UI
+            document.querySelector('.auth-container').innerHTML = `<span class="text-dndk">Tài khoản</span>
+                <span class="text-tk">${user.fullname} <i class="fa-sharp fa-solid fa-caret-down"></span>`
+            document.querySelector('.header-middle-right-menu').innerHTML = `<li><a href="javascript:;" onclick="myAccount()"><i class="fa-light fa-circle-user"></i> Tài khoản của tôi</a></li>
+                <li><a href="javascript:;" onclick="orderHistory()"><i class="fa-regular fa-bags-shopping"></i> Đơn hàng đã mua</a></li>
+                <li class="border"><a id="logout" href="javascript:;"><i class="fa-light fa-right-from-bracket"></i class="updateCart1"> Thoát tài khoản</a></li>`
+            document.querySelector('#logout').addEventListener('click',logOut);
+        })
+        .catch(error => {
+            // If error, still show from localStorage
+            document.querySelector('.auth-container').innerHTML = `<span class="text-dndk">Tài khoản</span>
+                <span class="text-tk">${user.fullname} <i class="fa-sharp fa-solid fa-caret-down"></span>`;
+            document.querySelector('.header-middle-right-menu').innerHTML = `<li><a href="javascript:;" onclick="myAccount()"><i class="fa-light fa-circle-user"></i> Tài khoản của tôi</a></li>
+                <li><a href="javascript:;" onclick="orderHistory()"><i class="fa-regular fa-bags-shopping"></i> Đơn hàng đã mua</a></li>
+                <li class="border"><a id="logout" href="javascript:;"><i class="fa-light fa-right-from-bracket"></i> Thoát tài khoản</a></li>`;
+            document.querySelector('#logout').addEventListener('click',logOut);
+        });
     }
 }
 
@@ -1525,6 +1545,10 @@ function detailOrder(id) {
     spHtml += `</div></div>`;
     spHtml += `<div class="modal-detail-right">
         <ul class="detail-order-group">
+            <li class="detail-order-item">
+                <span class="detail-order-item-left"><i class="fa-light fa-barcode"></i> Mã đơn hàng</span>
+                <span class="detail-order-item-right">${order.id}</span>
+            </li>
             <li class="detail-order-item">
                 <span class="detail-order-item-left"><i class="fa-light fa-calendar-days"></i> Ngày đặt hàng</span>
                 <span class="detail-order-item-right">${formatDate(order.thoigiandat)}</span>

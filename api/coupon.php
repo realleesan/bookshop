@@ -30,6 +30,18 @@ $sql = "CREATE TABLE IF NOT EXISTS `coupons` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 $conn->query($sql);
 
+// Create settings table if not exists
+$sqlSettings = "CREATE TABLE IF NOT EXISTS `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(50) NOT NULL UNIQUE,
+  `setting_value` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+$conn->query($sqlSettings);
+
+// Insert default footer discount setting if not exists
+$conn->query("INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`) VALUES ('footer_discount_percent', '10')");
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {
@@ -95,6 +107,48 @@ if ($method === 'POST') {
                 "valid" => false,
                 "message" => "Mã giảm giá không hợp lệ hoặc đã hết hạn!"
             ]);
+        }
+        $stmt->close();
+    }
+    elseif ($action === 'get_default_discount') {
+        // Get default discount percentage for footer signup
+        $stmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'footer_discount_percent'");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            echo json_encode([
+                "success" => true,
+                "discount_percent" => intval($row['setting_value'])
+            ]);
+        } else {
+            echo json_encode([
+                "success" => true,
+                "discount_percent" => 10
+            ]);
+        }
+        $stmt->close();
+    }
+    elseif ($action === 'update_default_discount') {
+        // Update default discount percentage
+        $discount = $_POST['discount'] ?? '';
+        
+        if (empty($discount) || $discount < 1 || $discount > 100) {
+            echo json_encode(["success" => false, "message" => "Giá trị giảm giá không hợp lệ (1-100)"]);
+            exit;
+        }
+        
+        $stmt = $conn->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'footer_discount_percent'");
+        $stmt->bind_param("s", $discount);
+        
+        if ($stmt->execute()) {
+            echo json_encode([
+                "success" => true,
+                "message" => "Đã cập nhật giảm giá thành " . $discount . "%"
+            ]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Lỗi khi cập nhật"]);
         }
         $stmt->close();
     }

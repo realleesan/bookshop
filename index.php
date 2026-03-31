@@ -584,7 +584,7 @@ session_start();
                     <div class="footer-top-subbox">
                         <div class="footer-top-subs">
                             <h2 class="footer-top-subs-title">Đăng ký nhận mã giảm giá</h2>
-                            <p class="footer-top-subs-text">Nhận mã giảm giá 10% từ chúng tôi</p>
+                            <p class="footer-top-subs-text" id="footer-discount-text">Nhận mã giảm giá <span id="footer-discount-percent">10</span>% từ chúng tôi</p>
                         </div>
                         <form class="form-ground" id="subscribe-form">
                             <input type="email" id="subscribe-email" class="form-ground-input" placeholder="Nhập email của bạn">
@@ -882,6 +882,34 @@ if (currentUser) {
     orders = orders.filter(order => order.khachhang === currentUser.phone);
 }
         showOrder(orders);
+        
+        // Load footer discount percentage and update footer text
+        function loadFooterDiscount() {
+            // First check localStorage
+            let storedDiscount = localStorage.getItem('footer_discount_percent');
+            if (storedDiscount) {
+                document.getElementById('footer-discount-percent').textContent = storedDiscount;
+            }
+            // Then fetch from server to get latest value
+            fetch('api/coupon.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=get_default_discount'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('footer-discount-percent').textContent = data.discount_percent;
+                    localStorage.setItem('footer_discount_percent', data.discount_percent);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading footer discount:', error);
+            });
+        }
+        loadFooterDiscount();
     </script>
 </body>
 </html>
