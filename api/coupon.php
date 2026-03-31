@@ -62,15 +62,25 @@ if ($method === 'POST') {
         // Set expiry date to 30 days from now
         $expires_at = date('Y-m-d H:i:s', strtotime('+30 days'));
         
-        // Insert into database
-        $stmt = $conn->prepare("INSERT INTO coupons (code, discount_percent, email, expires_at) VALUES (?, 10, ?, ?)");
-        $stmt->bind_param("sss", $code, $email, $expires_at);
+        // Get discount percentage from settings
+        $discountPercent = 10;
+        $stmtSetting = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'footer_discount_percent'");
+        $stmtSetting->execute();
+        $resultSetting = $stmtSetting->get_result();
+        if ($resultSetting->num_rows > 0) {
+            $rowSetting = $resultSetting->fetch_assoc();
+            $discountPercent = intval($rowSetting['setting_value']);
+        }
+        $stmtSetting->close();
+        
+        $stmt = $conn->prepare("INSERT INTO coupons (code, discount_percent, email, expires_at) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isss", $code, $discountPercent, $email, $expires_at);
         
         if ($stmt->execute()) {
             echo json_encode([
                 "success" => true, 
                 "code" => $code, 
-                "discount_percent" => 10,
+                "discount_percent" => $discountPercent,
                 "expires_at" => $expires_at
             ]);
         } else {
