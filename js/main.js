@@ -511,6 +511,7 @@ signupButton.addEventListener('click', () => {
 
 // Dang nhap
 loginButton.addEventListener('click', () => {
+    console.log('Login button clicked');
     event.preventDefault();
     let phonelog = document.getElementById('phone-login').value;
     let passlog = document.getElementById('password-login').value;
@@ -545,15 +546,36 @@ loginButton.addEventListener('click', () => {
             if(accounts[vitri].status == 0) {
                 toast({ title: 'Warning', message: 'Tài khoản của bạn đã bị khóa', type: 'warning', duration: 3000 });
             } else {
-                localStorage.setItem('currentuser', JSON.stringify(accounts[vitri]));
-                toast({ title: 'Success', message: 'Đăng nhập thành công', type: 'success', duration: 2000 });
-                closeModal();
-                kiemtradangnhap();
-                checkAdmin();
-                updateAmount();
-                setTimeout((e) => {
-                    window.location.reload();
-                }, 2000);  
+                // Fetch fresh user data from server to ensure userType is correct
+                fetch('api/get_user.php?phone=' + phonelog)
+                .then(response => response.json())
+                .then(userData => {
+                    if (userData.success) {
+                        localStorage.setItem('currentuser', JSON.stringify(userData.user));
+                    } else {
+                        localStorage.setItem('currentuser', JSON.stringify(accounts[vitri]));
+                    }
+                    toast({ title: 'Success', message: 'Đăng nhập thành công', type: 'success', duration: 2000 });
+                    closeModal();
+                    kiemtradangnhap();
+                    checkAdmin();
+                    updateAmount();
+                    setTimeout((e) => {
+                        window.location.reload();
+                    }, 2000);  
+                })
+                .catch(err => {
+                    // Fallback to local data if server fails
+                    localStorage.setItem('currentuser', JSON.stringify(accounts[vitri]));
+                    toast({ title: 'Success', message: 'Đăng nhập thành công', type: 'success', duration: 2000 });
+                    closeModal();
+                    kiemtradangnhap();
+                    checkAdmin();
+                    updateAmount();
+                    setTimeout((e) => {
+                        window.location.reload();
+                    }, 2000);
+                });
             }
         } else {
             toast({ title: 'Warning', message: 'Sai mật khẩu', type: 'warning', duration: 3000 });
@@ -582,6 +604,10 @@ function kiemtradangnhap() {
                 <li><a href="javascript:;" onclick="orderHistory()"><i class="fa-regular fa-bags-shopping"></i> Đơn hàng đã mua</a></li>
                 <li class="border"><a id="logout" href="javascript:;"><i class="fa-light fa-right-from-bracket"></i class="updateCart1"> Thoát tài khoản</a></li>`
             document.querySelector('#logout').addEventListener('click',logOut);
+            
+            // Check if user is admin and add admin menu link
+            console.log('Calling checkAdmin from kiemtradangnhap');
+            checkAdmin();
         })
         .catch(error => {
             // If error, still show from localStorage
@@ -629,14 +655,29 @@ function logOut() {
 function checkAdmin() {
     let user = JSON.parse(localStorage.getItem('currentuser'));
     if(user && user.userType == 1) {
-        let node = document.createElement(`li`);
+        let menu = document.querySelector('.header-middle-right-menu');
+        
+        // First, remove any existing admin link if it exists
+        let existingAdminLink = menu.querySelector('a[href*="admin.php"]');
+        if(existingAdminLink) {
+            existingAdminLink.parentElement.remove();
+        }
+        
+        // Create new admin link - use prepend to add at top
+        let node = document.createElement('li');
         node.innerHTML = `<a href="./admin.php"><i class="fa-light fa-gear"></i> Quản lý cửa hàng</a>`
-        document.querySelector('.header-middle-right-menu').prepend(node);
+        menu.prepend(node);
     } 
 }
 
-window.onload = kiemtradangnhap();
-window.onload = checkAdmin();
+window.addEventListener('load', function() {
+    console.log('Page loaded, calling kiemtradangnhap');
+    // Call kiemtradangnhap which will fetch user data and call checkAdmin()
+    kiemtradangnhap();
+    
+    // Also run checkAdmin directly on page load in case user is already logged in
+    setTimeout(checkAdmin, 500);
+});
 
 // Chuyển đổi trang chủ và trang thông tin tài khoản
 function myAccount() {

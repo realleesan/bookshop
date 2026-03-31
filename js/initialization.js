@@ -94,28 +94,28 @@ function getProducts() {
 // Tạo tài khoản admin
 function createAdminAccount() {
     let accounts = localStorage.getItem("accounts");
-    if (!accounts) {
-        fetch('getAccounts.php')
-            .then(response => response.json())
-            .then(data => {
-                // Đảm bảo các kiểu dữ liệu được xử lý chính xác trong JavaScript
-                data = data.map(account => {
-                    return {
-                        fullname: account.fullname,
-                        phone: account.phone,
-                        password: account.password,
-                        address: account.address,
-                        email: account.email,
-                        status: account.status, // Đã là kiểu số nguyên từ PHP
-                        join: new Date(account.join_date), // Chuyển chuỗi thành đối tượng Date
-                        cart: account.cart || [], // Đảm bảo cart là một mảng
-                        userType: account.userType // Đã là kiểu số nguyên từ PHP
-                    };
-                });
-
-                localStorage.setItem('accounts', JSON.stringify(data));
+    
+    // Always fetch fresh data from server to ensure userType is included
+    fetch('getAccounts.php')
+        .then(response => response.json())
+        .then(data => {
+            // Ensure data types are handled correctly in JavaScript
+            data = data.map(account => {
+                return {
+                    fullname: account.fullname,
+                    phone: account.phone,
+                    password: account.password,
+                    address: account.address,
+                    email: account.email,
+                    status: account.status, // Already integer from PHP
+                    join: new Date(account.join_date), // Convert string to Date object
+                    cart: account.cart || [], // Ensure cart is an array
+                    userType: account.userType // Already integer from PHP
+                };
             });
-    }
+
+            localStorage.setItem('accounts', JSON.stringify(data));
+        });
 }
 
 // Hàm cập nhật danh sách tài khoản admin từ server

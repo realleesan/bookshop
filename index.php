@@ -860,7 +860,7 @@ session_start();
     </div>
     <div id="toast"></div>
     <script src="./js/initialization.js?v=2"></script>
-    <script src="./js/main.js?v=2"></script>
+    <script src="./js/main.js?v=8"></script>
     <script src="./js/rating.js"></script>
     <script src="./js/checkout.js?v=2"></script>
     <script src="./js/checkorder.js"></script>

@@ -8,7 +8,7 @@ function checkLogin() {
         document.getElementById("name-acc").innerHTML = currentUser.fullname;
     }
 }
-window.onload = checkLogin();
+window.addEventListener('load', checkLogin);
 
 //do sidebar open and close
 const menuIconButton = document.querySelector(".menu-icon-btn");
