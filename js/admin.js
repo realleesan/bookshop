@@ -218,24 +218,32 @@ function createId(arr) {
 }
 // Xóa sản phẩm vĩnh viễn
 function deleteProduct(id) {
-    let products = JSON.parse(localStorage.getItem("products"));
     if (confirm("Bạn có chắc muốn xóa vĩnh viễn sản phẩm này? Hành động này không thể hoàn tác!") == true) {
-        // Remove product from array (hard delete)
-        products = products.filter(item => item.id != id);
-        
-        localStorage.setItem("products", JSON.stringify(products));
-        
-        // Gửi yêu cầu AJAX tới PHP để xóa vĩnh viễn khỏi database
+        // Gửi yêu cầu AJAX tới PHP để xóa vĩnh viễn khỏi database TRƯỚC
         fetch('api/product_manage.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ id: id, action: 'permanent_delete' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Chỉ xóa khỏi localStorage KHI API xóa thành công
+                let products = JSON.parse(localStorage.getItem("products"));
+                products = products.filter(item => item.id != id);
+                localStorage.setItem("products", JSON.stringify(products));
+                
+                showProduct();
+                toast({ title: 'Success', message: 'Xóa sản phẩm vĩnh viễn thành công!', type: 'success', duration: 3000 });
+            } else {
+                toast({ title: 'Lỗi', message: data.message || 'Không thể xóa sản phẩm!', type: 'error', duration: 3000 });
+            }
+        })
+        .catch(error => {
+            toast({ title: 'Lỗi', message: 'Đã xảy ra lỗi kết nối!', type: 'error', duration: 3000 });
         });
-        
-        toast({ title: 'Success', message: 'Xóa sản phẩm vĩnh viễn thành công !', type: 'success', duration: 3000 });
-        showProduct();
     }
 }
 
@@ -722,7 +730,7 @@ function loadOrdersFromDB() {
         localStorage.setItem('orderDetails', JSON.stringify(orderDetails));
         
         // Load products
-        return fetch('get_products.php');
+        return fetch('get_products.php?admin=true');
     })
     .then(r => r.json())
     .then(products => {

@@ -33,13 +33,21 @@ if ($conn->connect_error) {
 // Set charset to UTF-8
 $conn->set_charset("utf8");
 
+// Check if this is an admin request
+$isAdmin = isset($_GET['admin']) && $_GET['admin'] === 'true';
+
 // Add ranking columns if they don't exist
 $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `search_count` INT(11) DEFAULT 0");
 $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `like_count` INT(11) DEFAULT 0");
 $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS `sold_count` INT(11) DEFAULT 0");
 
-// Truy vấn dữ liệu từ bảng sản phẩm (lấy tất cả sản phẩm bao gồm cả đã xóa)
-$sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products";
+// Truy vấn dữ liệu từ bảng sản phẩm
+// Admin gets all products (including soft-deleted), user only gets active products
+if ($isAdmin) {
+    $sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products";
+} else {
+    $sql = "SELECT id, status, title, img, category, price, describes, search_count, like_count, sold_count FROM products WHERE status = 1";
+}
 $result = $conn->query($sql);
 
 $products = array();

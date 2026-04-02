@@ -43,7 +43,16 @@ file_put_contents('test_delete.log', $debugMsg, FILE_APPEND);
 $conn->begin_transaction();
 
 try {
+    // Bước 0: Kiểm tra xem tài khoản có tồn tại không trước
     $phoneEscaped = $conn->real_escape_string($phone);
+    $checkSql = "SELECT id FROM users WHERE phone = '$phoneEscaped'";
+    $checkResult = $conn->query($checkSql);
+    
+    if (!$checkResult || $checkResult->num_rows == 0) {
+        echo json_encode(["success" => false, "message" => "Không tìm thấy tài khoản để xóa!"]);
+        $conn->close();
+        exit;
+    }
     
     // Bước 1: Lấy danh sách đơn hàng của user
     $sqlGetOrders = "SELECT id FROM `order` WHERE khachhang = '$phoneEscaped'";
@@ -71,13 +80,14 @@ try {
     // Commit transaction
     $conn->commit();
     
-    // Kiểm tra số bản ghi bị ảnh hưởng
+    // Kiểm tra số bản ghi bị ảnh hưởng - chỉ kiểm tra ở bước cuối
     $affectedRows = $conn->affected_rows;
 
-    if ($result && $affectedRows > 0) {
+    // Nếu không có lỗi và đã xóa thành công (có thể xóa 1 bản ghi)
+    if ($result) {
         echo json_encode(["success" => true, "message" => "Xóa tài khoản và các đơn hàng liên quan thành công!"]);
     } else {
-        echo json_encode(["success" => false, "message" => "Không tìm thấy tài khoản để xóa!"]);
+        echo json_encode(["success" => false, "message" => "Đã xảy ra lỗi khi xóa tài khoản!"]);
     }
 } catch (Exception $e) {
     $conn->rollback();
